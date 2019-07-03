@@ -1,0 +1,1 @@
+dotnet ef database update -p ./src/Ranger.Services.Tenants.Data/Ranger.Services.Tenants.Data.csproj -c TenantDbContext -s ./src/Ranger.Services.Tenants/Ranger.Services.Tenants.csproj 
