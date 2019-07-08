@@ -12,7 +12,7 @@ namespace Ranger.Services.Tenants.Data {
         public DateTime? LastAccessed { get; set; }
 
         [StringLength (28, MinimumLength = 3)]
-        [RegularExpression (@"^[a-zA-Z0-9]{1}[a-zA-Z0-9_- ]{1,26}[a-zA-Z0-9]{1}$")]
+        [RegularExpression (@"^[a-zA-Z0-9]{1}[a-zA-Z0-9- ]{1,26}[a-zA-Z0-9]{1}$")]
         public string OrganizationName { get; set; }
 
         [StringLength (28, MinimumLength = 4)]

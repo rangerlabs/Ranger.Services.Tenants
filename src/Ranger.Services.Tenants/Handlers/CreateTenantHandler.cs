@@ -23,17 +23,17 @@ namespace Ranger.Services.Tenants.Handlers {
             var random = new Random ();
             var tenant = new Tenant () {
                 CreatedOn = DateTime.UtcNow,
-                OrganizationName = command.OrganizationName,
-                Domain = command.Domain,
+                OrganizationName = command.Domain.OrganizationName,
+                Domain = command.Domain.DomainName,
                 DatabaseUsername = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (16, 32)),
                 DatabasePassword = Crypto.GenerateSudoRandomPasswordString (),
                 RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (12, 16)),
                 DomainConfirmed = false
             };
             await this.tenantRepository.AddTenant (tenant);
-            logger.LogInformation ($"Tenant created for domain: '{command.Domain}'.");
+            logger.LogInformation ($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
-            busPublisher.PublishAsync<TenantCreated> (new TenantCreated { CorrelationContext = command.CorrelationContext, Domain = command.Domain });
+            busPublisher.Publish<TenantCreated> (new TenantCreated (command.CorrelationContext, command.Domain.DomainName, command.User));
         }
     }
 }
