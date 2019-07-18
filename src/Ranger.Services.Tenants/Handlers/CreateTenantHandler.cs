@@ -26,8 +26,7 @@ namespace Ranger.Services.Tenants.Handlers {
                 OrganizationName = command.Domain.OrganizationName,
                 Domain = command.Domain.DomainName,
                 DatabaseUsername = command.Domain.DomainName,
-                DatabasePassword = "pass",
-                // DatabasePassword = Crypto.GenerateSudoRandomPasswordString (),
+                DatabasePassword = Crypto.GenerateSudoRandomPasswordString (),
                 RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (12, 16)),
                 DomainConfirmed = false
             };

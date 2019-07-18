@@ -59,14 +59,9 @@ namespace Ranger.Services.Tenants {
                     options.RequireHttpsMetadata = false;
                 });
 
-            if (Environment.GetEnvironmentVariable ("ASPNETCORE_ENVIRONMENT") == EnvironmentName.Production) {
-                services.AddDataProtection ()
-                    .ProtectKeysWithCertificate (new X509Certificate2 (configuration["DataProtectionCertPath:Path"]))
-                    .PersistKeysToDbContext<TenantDbContext> ();
-                this.logger.LogInformation ("Production data protection certificate loaded.");
-            } else {
-                services.AddDataProtection ();
-            }
+            services.AddDataProtection ()
+                .ProtectKeysWithCertificate (new X509Certificate2 (configuration["DataProtectionCertPath:Path"]))
+                .PersistKeysToDbContext<TenantDbContext> ();
 
             var builder = new ContainerBuilder ();
             builder.Populate (services);
