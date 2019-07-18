@@ -20,11 +20,12 @@ namespace Ranger.Services.Tenants.Data {
         }
 
         public Tenant FindTenantByDomain (string domain) {
-            return context.Tenants.FirstOrDefault (t => t.Domain == domain);
+            return context.Tenants.SingleOrDefault (t => t.Domain == domain);
         }
 
         public async Task<Tenant> FindTenantByDomainAsync (string domain) {
-            return await context.Tenants.SingleAsync (t => t.Domain == domain);
+            var tenant = await context.Tenants.SingleOrDefaultAsync (t => t.Domain == domain);
+            return tenant;
         }
 
         public async Task<Tenant> FindTenantByIDAsync (int id) {

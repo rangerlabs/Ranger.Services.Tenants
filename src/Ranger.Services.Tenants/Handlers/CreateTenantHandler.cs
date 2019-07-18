@@ -25,15 +25,16 @@ namespace Ranger.Services.Tenants.Handlers {
                 CreatedOn = DateTime.UtcNow,
                 OrganizationName = command.Domain.OrganizationName,
                 Domain = command.Domain.DomainName,
-                DatabaseUsername = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (16, 32)),
-                DatabasePassword = Crypto.GenerateSudoRandomPasswordString (),
+                DatabaseUsername = command.Domain.DomainName,
+                DatabasePassword = "pass",
+                // DatabasePassword = Crypto.GenerateSudoRandomPasswordString (),
                 RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (12, 16)),
                 DomainConfirmed = false
             };
             await this.tenantRepository.AddTenant (tenant);
             logger.LogInformation ($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
-            busPublisher.Publish<TenantCreated> (new TenantCreated (command.CorrelationContext, command.Domain.DomainName, command.User));
+            busPublisher.Publish<TenantCreated> (new TenantCreated (command.CorrelationContext, command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.User));
         }
     }
 }

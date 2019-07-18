@@ -12,7 +12,7 @@ namespace Ranger.Services.Tenants.Data {
                 .Build ();
 
             var options = new DbContextOptionsBuilder<TenantDbContext> ();
-            options.UseNpgsql (config["CloudSql:TenantConnectionString"]);
+            options.UseNpgsql (config["cloudSql:ConnectionString"]);
 
             return new TenantDbContext (options.Options);
         }

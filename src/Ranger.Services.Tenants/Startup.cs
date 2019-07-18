@@ -41,7 +41,7 @@ namespace Ranger.Services.Tenants {
                 });
 
             services.AddEntityFrameworkNpgsql ().AddDbContext<TenantDbContext> (options => {
-                    options.UseNpgsql (configuration["CloudSql:TenantConnectionString"]);
+                    options.UseNpgsql (configuration["cloudSql:ConnectionString"]);
                 },
                 ServiceLifetime.Transient
             );
