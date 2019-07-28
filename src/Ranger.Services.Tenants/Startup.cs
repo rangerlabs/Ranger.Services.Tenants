@@ -5,7 +5,6 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -19,12 +18,14 @@ using Ranger.Services.Tenants.Data;
 namespace Ranger.Services.Tenants {
     public class Startup {
         private readonly IConfiguration configuration;
+        private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<Startup> logger;
         private IContainer container;
         private IBusSubscriber busSubscriber;
 
-        public Startup (IConfiguration configuration, ILogger<Startup> logger) {
+        public Startup (IConfiguration configuration, ILoggerFactory loggerFactory, ILogger<Startup> logger) {
             this.configuration = configuration;
+            this.loggerFactory = loggerFactory;
             this.logger = logger;
         }
 
@@ -65,7 +66,7 @@ namespace Ranger.Services.Tenants {
 
             var builder = new ContainerBuilder ();
             builder.Populate (services);
-            builder.AddRabbitMq ();
+            builder.AddRabbitMq (loggerFactory);
             container = builder.Build ();
             return new AutofacServiceProvider (container);
         }
@@ -76,7 +77,7 @@ namespace Ranger.Services.Tenants {
             app.UseMvcWithDefaultRoute ();
             this.busSubscriber = app.UseRabbitMQ ()
                 .SubscribeCommand<CreateTenant> ((c, e) =>
-                    new CreateTenantRejected (c.CorrelationContext, e.Message, ""));
+                    new CreateTenantRejected (e.Message, ""));
         }
 
         private void OnShutdown () {

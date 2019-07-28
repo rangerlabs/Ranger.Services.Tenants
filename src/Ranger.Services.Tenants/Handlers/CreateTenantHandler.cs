@@ -18,7 +18,7 @@ namespace Ranger.Services.Tenants.Handlers {
             this.busPublisher = busPublisher;
         }
 
-        public async Task HandleAsync (CreateTenant command) {
+        public async Task HandleAsync (CreateTenant command, ICorrelationContext context) {
             logger.LogInformation ("Handling CreateTenant message.");
             var random = new Random ();
             var tenant = new Tenant () {
@@ -33,7 +33,7 @@ namespace Ranger.Services.Tenants.Handlers {
             await this.tenantRepository.AddTenant (tenant);
             logger.LogInformation ($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
-            busPublisher.Publish<TenantCreated> (new TenantCreated (command.CorrelationContext, command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.User));
+            busPublisher.Publish<TenantCreated> (new TenantCreated (command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.User), context);
         }
     }
 }
