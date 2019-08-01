@@ -30,7 +30,14 @@ namespace Ranger.Services.Tenants.Handlers {
                 RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString (random.Next (12, 16)),
                 DomainConfirmed = false
             };
-            await this.tenantRepository.AddTenant (tenant);
+
+            try {
+                await this.tenantRepository.AddTenant (tenant);
+            } catch (Exception ex) {
+                logger.LogWarning (ex, $"Failed to create tenant for domain: '{command.Domain.DomainName}'. Rejecting request.");
+                throw new RangerException ("Failed to create tenant.", ex);
+            }
+
             logger.LogInformation ($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
             busPublisher.Publish<TenantCreated> (new TenantCreated (command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.User), context);

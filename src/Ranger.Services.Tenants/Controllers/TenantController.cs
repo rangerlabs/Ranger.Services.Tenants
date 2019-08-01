@@ -22,38 +22,39 @@ namespace Ranger.Services.Tenants {
 
         [HttpGet]
         public async Task<IActionResult> Exists (string domain) {
-            IActionResult response = StatusCode (StatusCodes.Status500InternalServerError);
             if (String.IsNullOrWhiteSpace (domain)) {
-                response = BadRequest ("Domain cannot be null or empty.");
+                return BadRequest ("Domain cannot be null or empty.");
             }
             if (await this.tenantRepository.ExistsAsync (domain)) {
-                response = Ok (true);
+                return Ok ();
             } else {
-                response = Ok (false);
+                return NotFound ();
             }
-            return response;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index (string domain) {
-            IActionResult response = StatusCode (StatusCodes.Status500InternalServerError);
             if (String.IsNullOrWhiteSpace (domain)) {
-                response = BadRequest ("Domain cannot be null or empty.");
+                return BadRequest ("Domain cannot be null or empty.");
             }
             Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync (domain);
-            response = Ok (tenant);
-            return response;
+            if (tenant is null) {
+                return NotFound ();
+            }
+            return Ok (tenant);
         }
 
         [HttpGet]
         public async Task<IActionResult> ConnectionString (string domain) {
-            IActionResult response = StatusCode (StatusCodes.Status500InternalServerError);
             if (String.IsNullOrWhiteSpace (domain)) {
-                response = BadRequest ("Domain cannot be null or empty.");
+                return BadRequest ("Domain cannot be null or empty.");
             }
             var connectionString = await this.tenantRepository.GetConnectionStringByDomainAsync (domain);
-            response = Ok (connectionString);
-            return response;
+            if (connectionString is null) {
+                return NotFound ();
+            } else {
+                return Ok (connectionString);
+            }
         }
     }
 }
