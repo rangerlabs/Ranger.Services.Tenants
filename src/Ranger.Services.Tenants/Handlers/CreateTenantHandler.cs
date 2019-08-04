@@ -40,7 +40,7 @@ namespace Ranger.Services.Tenants.Handlers {
 
             logger.LogInformation ($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
-            busPublisher.Publish<TenantCreated> (new TenantCreated (command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.User), context);
+            busPublisher.Publish<TenantCreated> (new TenantCreated (command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.Owner), context);
         }
     }
 }
