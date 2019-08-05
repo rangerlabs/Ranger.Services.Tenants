@@ -20,10 +20,10 @@ namespace Ranger.Services.Tenants {
             this.logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet ("/tenant/exists/{domain}")]
         public async Task<IActionResult> Exists (string domain) {
             if (String.IsNullOrWhiteSpace (domain)) {
-                return BadRequest ("Domain cannot be null or empty.");
+                return BadRequest (new { errors = $"{nameof(domain)} cannot be null or empty." });
             }
             if (await this.tenantRepository.ExistsAsync (domain)) {
                 return Ok ();
@@ -32,29 +32,16 @@ namespace Ranger.Services.Tenants {
             }
         }
 
-        [HttpGet]
+        [HttpGet ("/tenant/{domain}")]
         public async Task<IActionResult> Index (string domain) {
             if (String.IsNullOrWhiteSpace (domain)) {
-                return BadRequest ("Domain cannot be null or empty.");
+                return BadRequest (new { errors = $"{nameof(domain)} cannot be null or empty." });
             }
             Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync (domain);
             if (tenant is null) {
                 return NotFound ();
             }
             return Ok (tenant);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ConnectionString (string domain) {
-            if (String.IsNullOrWhiteSpace (domain)) {
-                return BadRequest ("Domain cannot be null or empty.");
-            }
-            var connectionString = await this.tenantRepository.GetConnectionStringByDomainAsync (domain);
-            if (connectionString is null) {
-                return NotFound ();
-            } else {
-                return Ok (connectionString);
-            }
         }
     }
 }
