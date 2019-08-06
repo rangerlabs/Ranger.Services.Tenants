@@ -1,7 +1,7 @@
 using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Tenants {
-    internal class CreateTenantRejected : IRejectedEvent {
+    public class CreateTenantRejected : IRejectedEvent {
         public string Reason { get; }
         public string Code { get; }
 
