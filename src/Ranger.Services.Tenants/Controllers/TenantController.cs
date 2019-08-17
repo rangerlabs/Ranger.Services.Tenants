@@ -20,7 +20,7 @@ namespace Ranger.Services.Tenants {
             this.logger = logger;
         }
 
-        [HttpGet ("/tenant/exists/{domain}")]
+        [HttpGet ("/tenant/{domain}/exists")]
         public async Task<IActionResult> Exists (string domain) {
             if (String.IsNullOrWhiteSpace (domain)) {
                 return BadRequest (new { errors = $"{nameof(domain)} cannot be null or empty." });

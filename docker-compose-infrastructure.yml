@@ -12,15 +12,15 @@ services:
             - tenants
         volumes:
             - postgres:/data/db
-    redis:
-        image: redis
-        container_name: tenants_redis
-        ports:
-            - "6379:6379"
-        networks:
-            - tenants
-        volumes:
-            - redis:/data
+    # redis:
+    #     image: redis
+    #     container_name: tenants_redis
+    #     ports:
+    #         - "6379:6379"
+    #     networks:
+    #         - tenants
+    #     volumes:
+    #         - redis:/data
 
 networks:
     tenants:
