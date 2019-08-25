@@ -15,7 +15,7 @@ namespace Ranger.Services.Tenants.Data {
         [RegularExpression (@"^[a-zA-Z0-9]{1}[a-zA-Z0-9- ]{1,26}[a-zA-Z0-9]{1}$")]
         public string OrganizationName { get; set; }
 
-        [StringLength (28, MinimumLength = 4)]
+        [StringLength (28, MinimumLength = 3)]
         [RegularExpression (@"^[a-zA-Z0-9]{1}[a-zA-Z0-9-]{1,26}[a-zA-Z0-9]{1}$")]
         public string Domain { get; set; }
 
