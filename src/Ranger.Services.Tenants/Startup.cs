@@ -15,43 +15,51 @@ using Newtonsoft.Json.Serialization;
 using Ranger.RabbitMQ;
 using Ranger.Services.Tenants.Data;
 
-namespace Ranger.Services.Tenants {
-    public class Startup {
+namespace Ranger.Services.Tenants
+{
+    public class Startup
+    {
         private readonly IConfiguration configuration;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<Startup> logger;
         private IContainer container;
         private IBusSubscriber busSubscriber;
 
-        public Startup (IConfiguration configuration, ILoggerFactory loggerFactory, ILogger<Startup> logger) {
+        public Startup(IConfiguration configuration, ILoggerFactory loggerFactory, ILogger<Startup> logger)
+        {
             this.configuration = configuration;
             this.loggerFactory = loggerFactory;
             this.logger = logger;
         }
 
-        public IServiceProvider ConfigureServices (IServiceCollection services) {
-            services.AddMvcCore (options => {
-                    var policy = ScopePolicy.Create ("tenantScope");
-                    options.Filters.Add (new AuthorizeFilter (policy));
-                })
-                .AddAuthorization ()
-                .AddJsonFormatters ()
-                .AddJsonOptions (options => {
-                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver ();
+        public IServiceProvider ConfigureServices(IServiceCollection services)
+        {
+            services.AddMvcCore(options =>
+            {
+                var policy = ScopePolicy.Create("tenantScope");
+                options.Filters.Add(new AuthorizeFilter(policy));
+            })
+                .AddAuthorization()
+                .AddJsonFormatters()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            services.AddEntityFrameworkNpgsql ().AddDbContext<TenantDbContext> (options => {
-                    options.UseNpgsql (configuration["cloudSql:ConnectionString"]);
-                },
+            services.AddEntityFrameworkNpgsql().AddDbContext<TenantDbContext>(options =>
+            {
+                options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
+            },
                 ServiceLifetime.Transient
             );
 
-            services.AddTransient<ITenantDbContextInitializer, TenantDbContextInitializer> ();
-            services.AddTransient<ITenantRepository, TenantRepository> ();
+            services.AddTransient<ITenantDbContextInitializer, TenantDbContextInitializer>();
+            services.AddTransient<ITenantRepository, TenantRepository>();
 
-            services.AddAuthentication ("Bearer")
-                .AddIdentityServerAuthentication (options => {
+            services.AddAuthentication("Bearer")
+                .AddIdentityServerAuthentication(options =>
+                {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "tenantsApi";
 
@@ -60,28 +68,32 @@ namespace Ranger.Services.Tenants {
                     options.RequireHttpsMetadata = false;
                 });
 
-            services.AddDataProtection ()
-                .ProtectKeysWithCertificate (new X509Certificate2 (configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<TenantDbContext> ();
+            services.AddDataProtection()
+                .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                .PersistKeysToDbContext<TenantDbContext>();
 
-            var builder = new ContainerBuilder ();
-            builder.Populate (services);
-            builder.AddRabbitMq (loggerFactory);
-            container = builder.Build ();
-            return new AutofacServiceProvider (container);
+            var builder = new ContainerBuilder();
+            builder.Populate(services);
+            builder.AddRabbitMq(loggerFactory);
+            container = builder.Build();
+            return new AutofacServiceProvider(container);
         }
 
-        public void Configure (IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime) {
-            applicationLifetime.ApplicationStopping.Register (OnShutdown);
-            app.UseAuthentication ();
-            app.UseMvcWithDefaultRoute ();
-            this.busSubscriber = app.UseRabbitMQ ()
-                .SubscribeCommand<CreateTenant> ((c, e) =>
-                    new CreateTenantRejected (e.Message, ""));
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+        {
+            applicationLifetime.ApplicationStopping.Register(OnShutdown);
+            app.UseAuthentication();
+            app.UseMvcWithDefaultRoute();
+            this.busSubscriber = app.UseRabbitMQ()
+                .SubscribeCommand<CreateTenant>((c, e) =>
+                   new CreateTenantRejected(e.Message, ""))
+                .SubscribeCommand<DeleteTenant>((c, e) =>
+                    new DeleteTenantRejected(e.Message, ""));
         }
 
-        private void OnShutdown () {
-            this.busSubscriber.Dispose ();
+        private void OnShutdown()
+        {
+            this.busSubscriber.Dispose();
         }
     }
 }
