@@ -34,12 +34,13 @@ namespace Ranger.Services.Tenants
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvcCore(options =>
-            {
-                var policy = ScopePolicy.Create("tenantScope");
-                options.Filters.Add(new AuthorizeFilter(policy));
-            })
-                .AddAuthorization()
+            services.AddMvcCore()
+                .AddAuthorization(options =>
+                    options.AddPolicy("tenantPolicy", policyBuilder =>
+                    {
+                        policyBuilder.RequireScope("tenantsApi");
+                    }
+                ))
                 .AddJsonFormatters()
                 .AddJsonOptions(options =>
                 {
@@ -55,6 +56,7 @@ namespace Ranger.Services.Tenants
             );
 
             services.AddTransient<ITenantDbContextInitializer, TenantDbContextInitializer>();
+            services.AddTransient<ITenantService, TenantService>();
             services.AddTransient<ITenantRepository, TenantRepository>();
 
             services.AddAuthentication("Bearer")

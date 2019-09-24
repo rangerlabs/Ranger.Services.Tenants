@@ -33,7 +33,7 @@ namespace Ranger.Services.Tenants.Handlers
                 DatabaseUsername = Guid.NewGuid().ToString("N"),
                 DatabasePassword = Crypto.GenerateSudoRandomPasswordString(),
                 RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(12, 16)),
-                DomainConfirmed = false
+                Enabled = false
             };
 
             try
@@ -48,7 +48,7 @@ namespace Ranger.Services.Tenants.Handlers
 
             logger.LogInformation($"Tenant created for domain: '{command.Domain.DomainName}'.");
 
-            busPublisher.Publish<TenantCreated>(new TenantCreated(command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, command.Owner), context);
+            busPublisher.Publish<TenantCreated>(new TenantCreated(command.Domain.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, tenant.RegistrationKey, command.Owner), context);
         }
     }
 }

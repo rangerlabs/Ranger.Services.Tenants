@@ -38,6 +38,6 @@ namespace Ranger.Services.Tenants.Data
         public string RegistrationKey { get; set; }
 
         [Required]
-        public bool DomainConfirmed { get; set; }
+        public bool Enabled { get; set; }
     }
 }
