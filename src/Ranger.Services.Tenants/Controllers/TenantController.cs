@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Ranger.Common;
 using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants
@@ -32,7 +33,9 @@ namespace Ranger.Services.Tenants
             Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
             if (tenant is null)
             {
-                return NotFound();
+                var errors = new ApiErrorContent();
+                errors.Errors.Add($"No tenant was foud for domain '{domain}'.");
+                return NotFound(errors);
             }
             return Ok(tenant);
         }
@@ -42,7 +45,9 @@ namespace Ranger.Services.Tenants
         {
             if (String.IsNullOrWhiteSpace(domain))
             {
-                return BadRequest(new { errors = $"{nameof(domain)} cannot be null or empty." });
+                var errors = new ApiErrorContent();
+                errors.Errors.Add($"{nameof(domain)} cannot be null or empty.");
+                return BadRequest(errors);
             }
             if (await this.tenantRepository.ExistsAsync(domain))
             {
@@ -59,7 +64,9 @@ namespace Ranger.Services.Tenants
         {
             if (String.IsNullOrWhiteSpace(domain))
             {
-                return BadRequest(new { errors = $"{nameof(domain)} cannot be null or empty." });
+                var errors = new ApiErrorContent();
+                errors.Errors.Add($"{nameof(domain)} cannot be null or empty.");
+                return BadRequest(errors);
             }
             Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
             if (tenant is null)
@@ -73,12 +80,17 @@ namespace Ranger.Services.Tenants
         public async Task<IActionResult> Confirm(string domain, ConfirmModel confirmModel)
         {
             TenantConfirmStatusEnum status = await tenantService.ConfirmTenantAsync(domain, confirmModel.RegistrationKey);
+            var errors = new ApiErrorContent();
             switch (status)
             {
                 case TenantConfirmStatusEnum.InvalidRegistrationKey:
-                    return StatusCode(StatusCodes.Status409Conflict, (new { error = "The registration key is invalid. Failed to confirm the domain." }));
+                    {
+                        errors.Errors.Add("The registration key is invalid. Failed to confirm the domain.");
+                        return StatusCode(StatusCodes.Status409Conflict, errors);
+                    }
                 case TenantConfirmStatusEnum.TenantNotFound:
-                    return NotFound();
+                    errors.Errors.Add($"No tenant was foud for domain '{domain}'.");
+                    return NotFound(errors);
 
                 case TenantConfirmStatusEnum.Confirmed:
                 case TenantConfirmStatusEnum.PreviouslyConfirmed:
