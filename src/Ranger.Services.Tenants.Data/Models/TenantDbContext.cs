@@ -58,15 +58,15 @@ namespace Ranger.Services.Tenants.Data
                 }
 
                 encryptionHelper?.SetEncrytedPropertyAccessMode(entity);
+            }
 
-                modelBuilder.Entity<Tenant>()
+            modelBuilder.Entity<Tenant>()
                   .HasIndex(t => t.Domain)
                   .IsUnique();
 
-                modelBuilder.Entity<Tenant>()
-                  .HasIndex(t => t.DatabaseUsername)
-                  .IsUnique();
-            }
+            modelBuilder.Entity<Tenant>()
+              .HasIndex(t => t.DatabaseUsername)
+              .IsUnique();
         }
     }
 }
