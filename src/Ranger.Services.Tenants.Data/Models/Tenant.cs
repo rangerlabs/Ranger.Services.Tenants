@@ -26,7 +26,6 @@ namespace Ranger.Services.Tenants.Data
         public string Domain { get; set; }
 
         [Required]
-        [Encrypted]
         public string DatabaseUsername { get; set; }
 
         [Required]

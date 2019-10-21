@@ -23,6 +23,23 @@ namespace Ranger.Services.Tenants
             this.logger = logger;
         }
 
+        [HttpGet("/tenant")]
+        public async Task<IActionResult> GetTenantByDatabaseName([FromQuery]string databaseUsername)
+        {
+            if (String.IsNullOrWhiteSpace(databaseUsername))
+            {
+                return BadRequest(new { errors = $"{nameof(databaseUsername)} cannot be null or empty." });
+            }
+            Tenant tenant = await this.tenantRepository.FindTenantEnabledByDatabaseUsernameAsync(databaseUsername);
+            if (tenant is null)
+            {
+                var errors = new ApiErrorContent();
+                errors.Errors.Add($"No tenant was found with database username '{databaseUsername}'.");
+                return NotFound(errors);
+            }
+            return Ok(tenant);
+        }
+
         [HttpGet("/tenant/{domain}")]
         public async Task<IActionResult> Index(string domain)
         {
@@ -34,7 +51,7 @@ namespace Ranger.Services.Tenants
             if (tenant is null)
             {
                 var errors = new ApiErrorContent();
-                errors.Errors.Add($"No tenant was foud for domain '{domain}'.");
+                errors.Errors.Add($"No tenant was found for domain '{domain}'.");
                 return NotFound(errors);
             }
             return Ok(tenant);

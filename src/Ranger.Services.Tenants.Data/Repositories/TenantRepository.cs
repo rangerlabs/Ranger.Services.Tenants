@@ -19,6 +19,11 @@ namespace Ranger.Services.Tenants.Data
             return await context.Tenants.AnyAsync((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
         }
 
+        public async Task<Tenant> FindTenantEnabledByDatabaseUsernameAsync(string databaseUsername)
+        {
+            return await context.Tenants.SingleOrDefaultAsync(_ => _.DatabaseUsername == databaseUsername);
+        }
+
         public bool Exists(string domain)
         {
             return context.Tenants.Any((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
