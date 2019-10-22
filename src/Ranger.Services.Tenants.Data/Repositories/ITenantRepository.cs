@@ -10,6 +10,7 @@ namespace Ranger.Services.Tenants.Data
         Task<bool> ExistsAsync(string domain);
         bool Exists(string domain);
         Tenant FindTenantByDomain(string domain);
+        Task<Tenant> FindTenantEnabledByDatabaseUsernameAsync(string databaseUsername);
         Task<Tenant> FindTenantByDomainAsync(string domain);
         Task<Tenant> FindTenantByIDAsync(int id);
         Task<DatabaseCredentials> GetConnectionStringByTenantIdAsync(int id);
