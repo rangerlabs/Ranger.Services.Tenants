@@ -17,12 +17,12 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new System.ArgumentException($"Argument '{nameof(domain)}' was null or whitespace.");
+                throw new System.ArgumentException($"'{nameof(domain)}' was null or whitespace.");
             }
 
             if (string.IsNullOrWhiteSpace(registrationKey))
             {
-                throw new System.ArgumentException($"Argument '{nameof(registrationKey)}' was null or whitespace.");
+                throw new System.ArgumentException($"'{nameof(registrationKey)}' was null or whitespace.");
             }
 
             Tenant tenant = await tenantRepository.FindTenantByDomainAsync(domain);

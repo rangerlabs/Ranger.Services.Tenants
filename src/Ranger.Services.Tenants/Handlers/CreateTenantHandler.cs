@@ -43,7 +43,7 @@ namespace Ranger.Services.Tenants.Handlers
             catch (Exception ex)
             {
                 logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain.DomainName}'. Rejecting request.");
-                throw new RangerException("Failed to create tenant.", ex);
+                throw new RangerException("Failed to create tenant.");
             }
 
             logger.LogInformation($"Tenant created for domain: '{command.Domain.DomainName}'.");
