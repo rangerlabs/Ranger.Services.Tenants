@@ -32,7 +32,7 @@ namespace Ranger.Services.Tenants.Handlers
                 Domain = command.Domain.DomainName,
                 DatabaseUsername = Guid.NewGuid().ToString("N"),
                 DatabasePassword = Crypto.GenerateSudoRandomPasswordString(),
-                RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(12, 16)),
+                RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(64, 64)),
                 Enabled = false
             };
 
