@@ -23,20 +23,24 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(DeleteTenant command, ICorrelationContext context)
         {
+            Tenant tenant = null;
             logger.LogInformation("Handling DeleteTenant message.");
             try
             {
-                var tenant = await this.tenantRepository.FindTenantByDomainAsync(command.Domain);
-                if (tenant is null)
-                {
-                    throw new RangerException($"No tenant found for domain {command.Domain}.");
-                }
-                await this.tenantRepository.Delete(tenant);
+                tenant = await this.tenantRepository.FindTenantByDomainAsync(command.Domain);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"Failed to delete tenant for domain: '{command.Domain}'.");
+                logger.LogWarning(ex, $"Failed to retrieve tenant.");
+                throw;
             }
+
+            if (tenant is null)
+            {
+                throw new RangerException($"No tenant found for domain {command.Domain}.");
+            }
+            await this.tenantRepository.Delete(tenant);
+
 
             logger.LogInformation($"Tenant domain deleted: '{command.Domain}'.");
             busPublisher.Publish(new TenantDeleted(command.Domain), context);

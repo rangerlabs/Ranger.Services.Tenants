@@ -32,7 +32,7 @@ namespace Ranger.Services.Tenants.Handlers
                 Domain = command.Domain.DomainName,
                 DatabaseUsername = Guid.NewGuid().ToString("N"),
                 DatabasePassword = Crypto.GenerateSudoRandomPasswordString(),
-                RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(12, 16)),
+                RegistrationKey = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(64, 64)),
                 Enabled = false
             };
 
@@ -43,7 +43,7 @@ namespace Ranger.Services.Tenants.Handlers
             catch (Exception ex)
             {
                 logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain.DomainName}'. Rejecting request.");
-                throw new RangerException("Failed to create tenant.", ex);
+                throw new RangerException("Failed to create tenant.");
             }
 
             logger.LogInformation($"Tenant created for domain: '{command.Domain.DomainName}'.");

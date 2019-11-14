@@ -1,7 +1,11 @@
-public enum TenantConfirmStatusEnum
+
+namespace Ranger.Services.Tenants
 {
-    PreviouslyConfirmed = 0,
-    InvalidRegistrationKey = 1,
-    Confirmed = 2,
-    TenantNotFound = 3
+    public enum TenantConfirmStatusEnum
+    {
+        PreviouslyConfirmed = 0,
+        InvalidRegistrationKey = 1,
+        Confirmed = 2,
+        TenantNotFound = 3
+    }
 }
