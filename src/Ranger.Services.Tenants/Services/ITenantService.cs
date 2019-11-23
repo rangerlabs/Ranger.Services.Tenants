@@ -4,6 +4,6 @@ namespace Ranger.Services.Tenants
 {
     public interface ITenantService
     {
-        Task<TenantConfirmStatusEnum> ConfirmTenantAsync(string domain, string registrationKey);
+        Task<TenantConfirmStatusEnum> ConfirmTenantAsync(string domain, string token);
     }
 }

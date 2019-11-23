@@ -7,7 +7,7 @@ namespace Ranger.Services.Tenants.Data
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "registration_key",
+                name: "token",
                 table: "tenants",
                 maxLength: 64,
                 nullable: false,
@@ -61,7 +61,7 @@ namespace Ranger.Services.Tenants.Data
                 table: "tenants");
 
             migrationBuilder.AlterColumn<string>(
-                name: "registration_key",
+                name: "token",
                 table: "tenants",
                 maxLength: 64,
                 nullable: true,

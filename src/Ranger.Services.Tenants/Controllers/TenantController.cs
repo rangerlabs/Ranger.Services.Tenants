@@ -96,11 +96,11 @@ namespace Ranger.Services.Tenants
         [HttpPut("tenant/{domain}/confirm")]
         public async Task<IActionResult> Confirm(string domain, ConfirmModel confirmModel)
         {
-            TenantConfirmStatusEnum status = await tenantService.ConfirmTenantAsync(domain, confirmModel.RegistrationKey);
+            TenantConfirmStatusEnum status = await tenantService.ConfirmTenantAsync(domain, confirmModel.Token);
             var errors = new ApiErrorContent();
             switch (status)
             {
-                case TenantConfirmStatusEnum.InvalidRegistrationKey:
+                case TenantConfirmStatusEnum.InvalidToken:
                     {
                         errors.Errors.Add("The registration key is invalid. Failed to confirm the domain.");
                         return StatusCode(StatusCodes.Status409Conflict, errors);

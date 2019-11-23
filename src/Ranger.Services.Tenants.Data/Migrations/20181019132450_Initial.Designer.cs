@@ -6,56 +6,60 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace Ranger.Services.Tenants.Data {
-    [DbContext (typeof (TenantDbContext))]
-    [Migration ("20181019132450_Initial")]
-    partial class Initial {
-        protected override void BuildTargetModel (ModelBuilder modelBuilder) {
+namespace Ranger.Services.Tenants.Data
+{
+    [DbContext(typeof(TenantDbContext))]
+    [Migration("20181019132450_Initial")]
+    partial class Initial
+    {
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation ("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation ("ProductVersion", "2.1.3-rtm-32065")
-                .HasAnnotation ("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                .HasAnnotation("ProductVersion", "2.1.3-rtm-32065")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity ("Ranger.Services.Tenants.Data.Tenant", b => {
-                b.Property<int> ("Id")
-                    .ValueGeneratedOnAdd ()
-                    .HasColumnName ("id");
+            modelBuilder.Entity("Ranger.Services.Tenants.Data.Tenant", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnName("id");
 
-                b.Property<string> ("ConnectionString")
-                    .HasColumnName ("connection_string");
+                b.Property<string>("ConnectionString")
+                    .HasColumnName("connection_string");
 
-                b.Property<DateTime> ("CreatedOn")
-                    .HasColumnName ("created_on");
+                b.Property<DateTime>("CreatedOn")
+                    .HasColumnName("created_on");
 
-                b.Property<string> ("Domain")
-                    .HasColumnName ("domain")
-                    .HasMaxLength (28);
+                b.Property<string>("Domain")
+                    .HasColumnName("domain")
+                    .HasMaxLength(28);
 
-                b.Property<bool> ("DomainConfirmed")
-                    .HasColumnName ("domain_confirmed");
+                b.Property<bool>("DomainConfirmed")
+                    .HasColumnName("domain_confirmed");
 
-                b.Property<string> ("DomainPassword")
-                    .HasColumnName ("domain_password");
+                b.Property<string>("DomainPassword")
+                    .HasColumnName("domain_password");
 
-                b.Property<DateTime?> ("LastAccessed")
-                    .HasColumnName ("last_accessed");
+                b.Property<DateTime?>("LastAccessed")
+                    .HasColumnName("last_accessed");
 
-                b.Property<string> ("Name")
-                    .HasColumnName ("name")
-                    .HasMaxLength (28);
+                b.Property<string>("Name")
+                    .HasColumnName("name")
+                    .HasMaxLength(28);
 
-                b.Property<string> ("RegistrationKey")
-                    .HasColumnName ("registration_key")
-                    .HasMaxLength (64);
+                b.Property<string>("Token")
+                    .HasColumnName("token")
+                    .HasMaxLength(64);
 
-                b.HasKey ("Id")
-                    .HasName ("pk_tenants");
+                b.HasKey("Id")
+                    .HasName("pk_tenants");
 
-                b.HasIndex ("Domain")
-                    .IsUnique ();
+                b.HasIndex("Domain")
+                    .IsUnique();
 
-                b.ToTable ("tenants");
+                b.ToTable("tenants");
             });
 #pragma warning restore 612, 618
         }

@@ -68,8 +68,8 @@ namespace Ranger.Services.Tenants.Data
                         .HasColumnName("organization_name")
                         .HasMaxLength(28);
 
-                    b.Property<string>("RegistrationKey")
-                        .HasColumnName("registration_key")
+                    b.Property<string>("Token")
+                        .HasColumnName("token")
                         .HasMaxLength(64);
 
                     b.HasKey("Id")
