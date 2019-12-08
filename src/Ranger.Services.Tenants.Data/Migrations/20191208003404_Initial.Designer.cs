@@ -7,31 +7,35 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ranger.Services.Tenants.Data;
 
-namespace Ranger.Services.Tenants.Data
+namespace Ranger.Services.Tenants.Data.Migrations
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20190630140604_UpdateTenantModel")]
-    partial class UpdateTenantModel
+    [Migration("20191208003404_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.0-rtm-35687")
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                .HasAnnotation("ProductVersion", "3.1.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id");
+                        .HasColumnName("id")
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("FriendlyName")
-                        .HasColumnName("friendly_name");
+                        .HasColumnName("friendly_name")
+                        .HasColumnType("text");
 
                     b.Property<string>("Xml")
-                        .HasColumnName("xml");
+                        .HasColumnName("xml")
+                        .HasColumnType("text");
 
                     b.HasKey("Id")
                         .HasName("pk_data_protection_keys");
@@ -43,41 +47,58 @@ namespace Ranger.Services.Tenants.Data
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("id");
+                        .HasColumnName("id")
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<DateTime>("CreatedOn")
-                        .HasColumnName("created_on");
+                        .HasColumnName("created_on")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DatabasePassword")
-                        .HasColumnName("database_password");
+                        .IsRequired()
+                        .HasColumnName("database_password")
+                        .HasColumnType("text");
 
                     b.Property<string>("DatabaseUsername")
-                        .HasColumnName("database_username");
+                        .IsRequired()
+                        .HasColumnName("database_username")
+                        .HasColumnType("text");
 
                     b.Property<string>("Domain")
+                        .IsRequired()
                         .HasColumnName("domain")
+                        .HasColumnType("character varying(28)")
                         .HasMaxLength(28);
 
-                    b.Property<bool>("DomainConfirmed")
-                        .HasColumnName("domain_confirmed");
+                    b.Property<bool>("Enabled")
+                        .HasColumnName("enabled")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastAccessed")
-                        .HasColumnName("last_accessed");
+                        .HasColumnName("last_accessed")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("OrganizationName")
+                        .IsRequired()
                         .HasColumnName("organization_name")
+                        .HasColumnType("character varying(28)")
                         .HasMaxLength(28);
 
                     b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnName("token")
+                        .HasColumnType("character varying(64)")
                         .HasMaxLength(64);
 
                     b.HasKey("Id")
                         .HasName("pk_tenants");
 
+                    b.HasIndex("DatabaseUsername")
+                        .IsUnique();
+
                     b.HasIndex("Domain")
-                        .IsUnique()
-                        .HasName("ix_tenants_domain");
+                        .IsUnique();
 
                     b.ToTable("tenants");
                 });

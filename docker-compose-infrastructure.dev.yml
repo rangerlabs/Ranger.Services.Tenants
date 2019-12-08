@@ -1,4 +1,4 @@
-version: "3.5"
+version: '3.5'
 services:
     postgres:
         image: postgres:11
@@ -7,7 +7,7 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
         ports:
-            - "5432:5432"
+            - '5432:5432'
         networks:
             - ranger
         volumes:
@@ -31,5 +31,5 @@ networks:
 volumes:
     postgres:
         driver: local
-    redis:
-        driver: local
+    # redis:
+    # driver: local

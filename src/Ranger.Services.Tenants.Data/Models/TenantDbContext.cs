@@ -61,12 +61,19 @@ namespace Ranger.Services.Tenants.Data
             }
 
             modelBuilder.Entity<Tenant>()
-                  .HasIndex(t => t.Domain)
-                  .IsUnique();
+                .Property(t => t.Domain)
+                .HasConversion(
+                    v => v.ToLowerInvariant(),
+                    v => v
+                );
 
             modelBuilder.Entity<Tenant>()
-              .HasIndex(t => t.DatabaseUsername)
-              .IsUnique();
+                .HasIndex(t => t.Domain)
+                .IsUnique();
+
+            modelBuilder.Entity<Tenant>()
+                .HasIndex(t => t.DatabaseUsername)
+                .IsUnique();
         }
     }
 }

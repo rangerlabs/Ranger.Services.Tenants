@@ -85,8 +85,14 @@ namespace Ranger.Services.Tenants
             this.loggerFactory = loggerFactory;
 
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
+
+            app.UseRouting();
             app.UseAuthentication();
-            app.UseMvcWithDefaultRoute();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateTenant>((c, e) =>
                    new CreateTenantRejected(e.Message, ""))
