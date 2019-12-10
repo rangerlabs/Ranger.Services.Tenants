@@ -34,7 +34,7 @@ namespace Ranger.Services.Tenants.Data
 
         [Required]
         [MaxLength(64)]
-        public string RegistrationKey { get; set; }
+        public string Token { get; set; }
 
         [Required]
         public bool Enabled { get; set; }

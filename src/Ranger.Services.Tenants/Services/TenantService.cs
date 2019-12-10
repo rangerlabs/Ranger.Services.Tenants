@@ -13,16 +13,16 @@ namespace Ranger.Services.Tenants
             this.tenantRepository = tenantRepository;
         }
 
-        public async Task<TenantConfirmStatusEnum> ConfirmTenantAsync(string domain, string registrationKey)
+        public async Task<TenantConfirmStatusEnum> ConfirmTenantAsync(string domain, string token)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
                 throw new System.ArgumentException($"'{nameof(domain)}' was null or whitespace.");
             }
 
-            if (string.IsNullOrWhiteSpace(registrationKey))
+            if (string.IsNullOrWhiteSpace(token))
             {
-                throw new System.ArgumentException($"'{nameof(registrationKey)}' was null or whitespace.");
+                throw new System.ArgumentException($"'{nameof(token)}' was null or whitespace.");
             }
 
             Tenant tenant = await tenantRepository.FindTenantByDomainAsync(domain);
@@ -35,14 +35,14 @@ namespace Ranger.Services.Tenants
                 return TenantConfirmStatusEnum.PreviouslyConfirmed;
             }
 
-            if (tenant.RegistrationKey == registrationKey)
+            if (tenant.Token == token)
             {
-                tenant.RegistrationKey = "";
+                tenant.Token = "";
                 tenant.Enabled = true;
                 await tenantRepository.UpdateTenantAsync(tenant);
                 return TenantConfirmStatusEnum.Confirmed;
             }
-            return TenantConfirmStatusEnum.InvalidRegistrationKey;
+            return TenantConfirmStatusEnum.InvalidToken;
         }
     }
 }

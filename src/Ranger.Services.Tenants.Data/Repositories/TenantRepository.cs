@@ -16,7 +16,7 @@ namespace Ranger.Services.Tenants.Data
 
         public async Task<bool> ExistsAsync(string domain)
         {
-            return await context.Tenants.AnyAsync((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
+            return await context.Tenants.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
         }
 
         public async Task<Tenant> FindTenantEnabledByDatabaseUsernameAsync(string databaseUsername)
@@ -26,17 +26,17 @@ namespace Ranger.Services.Tenants.Data
 
         public bool Exists(string domain)
         {
-            return context.Tenants.Any((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
+            return context.Tenants.Any((t => t.Domain == domain.ToLowerInvariant()));
         }
 
         public Tenant FindTenantByDomain(string domain)
         {
-            return context.Tenants.SingleOrDefault((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
+            return context.Tenants.SingleOrDefault((t => t.Domain == domain.ToLowerInvariant()));
         }
 
         public async Task<Tenant> FindTenantByDomainAsync(string domain)
         {
-            return await context.Tenants.SingleOrDefaultAsync((t => String.Equals(t.Domain, domain, StringComparison.OrdinalIgnoreCase)));
+            return await context.Tenants.SingleOrDefaultAsync((t => t.Domain == domain.ToLowerInvariant()));
         }
 
         public async Task<Tenant> FindTenantByIDAsync(int id)
@@ -52,7 +52,7 @@ namespace Ranger.Services.Tenants.Data
 
         public async Task<DatabaseCredentials> GetConnectionStringByDomainAsync(string domain)
         {
-            var result = await context.Tenants.SingleAsync(t => t.Domain == domain);
+            var result = await context.Tenants.SingleAsync(t => t.Domain == domain.ToLowerInvariant());
             return new DatabaseCredentials(result.DatabaseUsername, result.DatabasePassword);
         }
 

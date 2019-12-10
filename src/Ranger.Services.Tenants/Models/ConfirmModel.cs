@@ -5,6 +5,6 @@ namespace Ranger.Services.Tenants
     public class ConfirmModel
     {
         [Required]
-        public string RegistrationKey { get; set; }
+        public string Token { get; set; }
     }
 }
