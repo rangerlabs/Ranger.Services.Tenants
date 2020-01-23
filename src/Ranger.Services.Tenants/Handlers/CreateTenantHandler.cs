@@ -29,7 +29,7 @@ namespace Ranger.Services.Tenants.Handlers
             {
                 CreatedOn = DateTime.UtcNow,
                 OrganizationName = command.OrganizationName,
-                Domain = command.DomainName,
+                Domain = command.Domain,
                 DatabaseUsername = Guid.NewGuid().ToString("N"),
                 DatabasePassword = Crypto.GenerateSudoRandomPasswordString(),
                 Token = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(64, 64)),
@@ -42,13 +42,13 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.DomainName}'. Rejecting request.");
+                logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain}'. Rejecting request.");
                 throw new RangerException("Failed to create tenant.");
             }
 
-            logger.LogInformation($"Tenant created for domain: '{command.DomainName}'.");
+            logger.LogInformation($"Tenant created for domain: '{command.Domain}'.");
 
-            busPublisher.Publish<TenantCreated>(new TenantCreated(command.DomainName, tenant.DatabaseUsername, tenant.DatabasePassword, tenant.Token), context);
+            busPublisher.Publish<TenantCreated>(new TenantCreated(command.Domain, command.Email, command.FirstName, command.LastName, command.Password, command.OrganizationName, tenant.DatabaseUsername, tenant.DatabasePassword, tenant.Token), context);
         }
     }
 }
