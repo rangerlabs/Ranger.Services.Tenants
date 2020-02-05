@@ -65,8 +65,6 @@ namespace Ranger.Services.Tenants
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "tenantsApi";
 
-                    //TODO: Change these to true
-                    options.EnableCaching = false;
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -77,7 +75,7 @@ namespace Ranger.Services.Tenants
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            builder.AddRabbitMq(this.loggerFactory);
+            builder.AddRabbitMq();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
