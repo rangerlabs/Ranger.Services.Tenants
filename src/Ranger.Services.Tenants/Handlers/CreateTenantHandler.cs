@@ -11,10 +11,10 @@ namespace Ranger.Services.Tenants.Handlers
     class CreateTenantHandler : ICommandHandler<CreateTenant>
     {
         private readonly ILogger<CreateTenantHandler> logger;
-        private readonly ITenantRepository tenantRepository;
+        private readonly ITenantsRepository tenantRepository;
         private readonly IBusPublisher busPublisher;
 
-        public CreateTenantHandler(ILogger<CreateTenantHandler> logger, ITenantRepository tenantRepository, IBusPublisher busPublisher)
+        public CreateTenantHandler(ILogger<CreateTenantHandler> logger, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
         {
             this.logger = logger;
             this.tenantRepository = tenantRepository;
@@ -38,7 +38,7 @@ namespace Ranger.Services.Tenants.Handlers
 
             try
             {
-                await this.tenantRepository.AddTenant(tenant);
+                await this.tenantRepository.AddTenant(command.Email, tenant);
             }
             catch (Exception ex)
             {

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Ranger.Common;
+using Ranger.Common.Data.Exceptions;
 using Ranger.RabbitMQ;
 using Ranger.Services.Tenants.Data;
 
@@ -11,10 +12,10 @@ namespace Ranger.Services.Tenants.Handlers
     class DeleteTenantHandler : ICommandHandler<DeleteTenant>
     {
         private readonly ILogger<CreateTenantHandler> logger;
-        private readonly ITenantRepository tenantRepository;
+        private readonly ITenantsRepository tenantRepository;
         private readonly IBusPublisher busPublisher;
 
-        public DeleteTenantHandler(ILogger<CreateTenantHandler> logger, ITenantRepository tenantRepository, IBusPublisher busPublisher)
+        public DeleteTenantHandler(ILogger<CreateTenantHandler> logger, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
         {
             this.logger = logger;
             this.tenantRepository = tenantRepository;
@@ -39,9 +40,21 @@ namespace Ranger.Services.Tenants.Handlers
             {
                 throw new RangerException($"No tenant found for domain {command.Domain}.");
             }
-            await this.tenantRepository.Delete(tenant);
 
-
+            try
+            {
+                await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.Domain);
+            }
+            catch (ConcurrencyException ex)
+            {
+                logger.LogWarning(ex.Message);
+                throw new RangerException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to delete the tenant with domain '{command.Domain}'.");
+                throw new RangerException("Failed to delete the tenant. No additional data could be provided.");
+            }
             logger.LogInformation($"Tenant domain deleted: '{command.Domain}'.");
             busPublisher.Publish(new TenantDeleted(command.Domain), context);
         }

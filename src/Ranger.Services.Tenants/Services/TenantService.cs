@@ -4,11 +4,11 @@ using Ranger.Services.Tenants.Data;
 namespace Ranger.Services.Tenants
 {
 
-    public class TenantService : ITenantService
+    public class TenantsService : ITenantService
     {
-        private readonly ITenantRepository tenantRepository;
+        private readonly ITenantsRepository tenantRepository;
 
-        public TenantService(ITenantRepository tenantRepository)
+        public TenantsService(ITenantsRepository tenantRepository)
         {
             this.tenantRepository = tenantRepository;
         }
@@ -39,7 +39,7 @@ namespace Ranger.Services.Tenants
             {
                 tenant.Token = "";
                 tenant.Enabled = true;
-                await tenantRepository.UpdateTenantAsync(tenant);
+                await tenantRepository.UpdateTenantAsync("", "TenantConfirmed", 1, tenant);
                 return TenantConfirmStatusEnum.Confirmed;
             }
             return TenantConfirmStatusEnum.InvalidToken;

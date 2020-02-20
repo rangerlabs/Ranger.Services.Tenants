@@ -7,16 +7,17 @@ using Ranger.Common;
 
 namespace Ranger.Services.Tenants.Data
 {
-    public class TenantDbContext : DbContext, IDataProtectionKeyContext
+    public class TenantsDbContext : DbContext, IDataProtectionKeyContext
     {
 
         private readonly IDataProtectionProvider dataProtectionProvider;
-        public TenantDbContext(DbContextOptions<TenantDbContext> options, IDataProtectionProvider dataProtectionProvider = null) : base(options)
+        public TenantsDbContext(DbContextOptions<TenantsDbContext> options, IDataProtectionProvider dataProtectionProvider = null) : base(options)
         {
             this.dataProtectionProvider = dataProtectionProvider;
         }
 
-        public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<TenantStream> TenantStreams { get; set; }
+        public DbSet<TenantUniqueConstraint> TenantUniqueConstraints { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

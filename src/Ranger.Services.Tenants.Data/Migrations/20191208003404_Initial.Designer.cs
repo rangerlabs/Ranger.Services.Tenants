@@ -9,7 +9,7 @@ using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants.Data.Migrations
 {
-    [DbContext(typeof(TenantDbContext))]
+    [DbContext(typeof(TenantsDbContext))]
     [Migration("20191208003404_Initial")]
     partial class Initial
     {

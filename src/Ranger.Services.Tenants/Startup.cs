@@ -48,16 +48,16 @@ namespace Ranger.Services.Tenants
             ));
 
 
-            services.AddEntityFrameworkNpgsql().AddDbContext<TenantDbContext>(options =>
+            services.AddEntityFrameworkNpgsql().AddDbContext<TenantsDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
                 ServiceLifetime.Transient
             );
 
-            services.AddTransient<ITenantDbContextInitializer, TenantDbContextInitializer>();
-            services.AddTransient<ITenantService, TenantService>();
-            services.AddTransient<ITenantRepository, TenantRepository>();
+            services.AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
+            services.AddTransient<ITenantService, TenantsService>();
+            services.AddTransient<ITenantsRepository, TenantsRepository>();
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
@@ -70,7 +70,7 @@ namespace Ranger.Services.Tenants
 
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<TenantDbContext>();
+                .PersistKeysToDbContext<TenantsDbContext>();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

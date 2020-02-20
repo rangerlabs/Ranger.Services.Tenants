@@ -13,10 +13,10 @@ namespace Ranger.Services.Tenants
     public class TenantController : Controller
     {
         private readonly ITenantService tenantService;
-        private readonly ITenantRepository tenantRepository;
+        private readonly ITenantsRepository tenantRepository;
         private readonly ILogger<TenantController> logger;
 
-        public TenantController(ITenantRepository tenantRepository, ITenantService tenantService, ILogger<TenantController> logger)
+        public TenantController(ITenantsRepository tenantRepository, ITenantService tenantService, ILogger<TenantController> logger)
         {
             this.tenantService = tenantService;
             this.tenantRepository = tenantRepository;
@@ -30,7 +30,7 @@ namespace Ranger.Services.Tenants
             {
                 return BadRequest(new { errors = $"{nameof(databaseUsername)} cannot be null or empty." });
             }
-            Tenant tenant = await this.tenantRepository.FindTenantEnabledByDatabaseUsernameAsync(databaseUsername);
+            Tenant tenant = await this.tenantRepository.FindTenantByDatabaseUsernameAsync(databaseUsername);
             if (tenant is null)
             {
                 var errors = new ApiErrorContent();

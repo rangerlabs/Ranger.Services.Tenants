@@ -1,0 +1,298 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Npgsql;
+using Ranger.Common.Data.Exceptions;
+
+namespace Ranger.Services.Tenants.Data
+{
+    public class TenantsRepository : ITenantsRepository
+    {
+        private readonly IDataProtector dataProtector;
+        private readonly ILogger<TenantsRepository> logger;
+        private readonly TenantsDbContext context;
+        public TenantsRepository(ILogger<TenantsRepository> logger, IDataProtectionProvider dataProtectionProvider)
+        {
+            this.logger = logger;
+            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(TenantsRepository));
+        }
+
+        public async Task AddTenant(string userEmail, Tenant tenant)
+        {
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+            }
+            if (tenant is null)
+            {
+                throw new ArgumentNullException($"{nameof(tenant)} was null.");
+            }
+
+            tenant.Domain = tenant.Domain.ToLowerInvariant();
+            tenant.DatabasePassword = this.dataProtector.Protect(tenant.DatabasePassword);
+            var tenantStream = new TenantStream()
+            {
+                StreamId = Guid.NewGuid(),
+                Version = 0,
+                Data = JsonConvert.SerializeObject(tenant),
+                Event = "AddTenant",
+                InsertedAt = DateTime.UtcNow,
+                InsertedBy = userEmail
+            };
+            this.AddTenantUniqueConstraints(tenantStream, tenant);
+            this.context.TenantStreams.Add(tenantStream);
+            try
+            {
+                await this.context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var postgresException = ex.InnerException as PostgresException;
+                if (postgresException.SqlState == "23505")
+                {
+                    var uniqueIndexViolation = postgresException.ConstraintName;
+                    switch (uniqueIndexViolation)
+                    {
+                        case TenantJsonbConstraintNames.Domain:
+                            {
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                            }
+                        default:
+                            {
+                                throw new EventStreamDataConstraintException("");
+                            }
+                    }
+                }
+                throw;
+            }
+        }
+
+        public async Task SoftDelete(string userEmail, string domain)
+        {
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+            }
+
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+            }
+            domain = domain.ToLowerInvariant();
+
+            var currentTenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            if (!(currentTenantStream is null))
+            {
+                var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
+                currentTenant.Deleted = true;
+                var deleted = false;
+                var maxConcurrencyAttempts = 3;
+                while (!deleted && maxConcurrencyAttempts != 0)
+                {
+
+                    var updatedTenantStream = new TenantStream
+                    {
+                        StreamId = currentTenantStream.StreamId,
+                        Version = currentTenantStream.Version + 1,
+                        Data = JsonConvert.SerializeObject(currentTenant),
+                        Event = "TenantDeleted",
+                        InsertedAt = DateTime.UtcNow,
+                        InsertedBy = userEmail
+                    };
+                    this.context.TenantUniqueConstraints.Remove(await this.context.TenantUniqueConstraints.Where(_ => _.TenantId == currentTenant.TenantId).SingleAsync());
+                    this.context.TenantStreams.Add(updatedTenantStream);
+                    try
+                    {
+                        await this.context.SaveChangesAsync();
+                        deleted = true;
+                        logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted.");
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        var postgresException = ex.InnerException as PostgresException;
+                        if (postgresException.SqlState == "23505")
+                        {
+                            var uniqueIndexViolation = postgresException.ConstraintName;
+                            switch (uniqueIndexViolation)
+                            {
+                                case TenantJsonbConstraintNames.TenantId_Version:
+                                    {
+                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentTenantStream.Version + 1}'.");
+                                        maxConcurrencyAttempts--;
+                                        continue;
+                                    }
+                            }
+                        }
+                        throw;
+                    }
+                }
+                if (!deleted)
+                {
+                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted.");
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"No tenant was found with domain '{domain}'.");
+            }
+        }
+
+
+        public async Task<bool> ExistsAsync(string domain)
+        {
+            return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
+        }
+
+        public async Task<Tenant> FindTenantByDomainAsync(string domain)
+        {
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException("message", nameof(domain));
+            }
+
+            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+            tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+            return tenant;
+        }
+
+        public async Task<Tenant> FindTenantByDatabaseUsernameAsync(string databaseUsername)
+        {
+            if (string.IsNullOrWhiteSpace(databaseUsername))
+            {
+                throw new ArgumentException("message", nameof(databaseUsername));
+            }
+
+            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'DatabaseUsername' = {databaseUsername} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+            tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+            return tenant;
+        }
+
+        public Task UpdateLastAccessed(string domain)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public async Task<Tenant> UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant)
+        {
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+            }
+
+            if (string.IsNullOrWhiteSpace(eventName))
+            {
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+            }
+            if (tenant is null)
+            {
+                throw new ArgumentException($"{nameof(tenant)} was null.");
+            }
+
+            var currentTenantStream = await this.GetTenantStreamByDomainAsync(tenant.Domain);
+            ValidateRequestVersionIncremented(version, currentTenantStream);
+
+            var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
+            tenant.TenantId = outdatedTenant.TenantId; //Domain is used externally as the Id
+            tenant.CreatedOn = outdatedTenant.CreatedOn;
+            tenant.DatabaseUsername = outdatedTenant.DatabaseUsername;
+            tenant.DatabasePassword = outdatedTenant.DatabasePassword;
+            tenant.Deleted = false;
+
+            var serializedNewTenantData = JsonConvert.SerializeObject(currentTenantStream.Data);
+            var uniqueConstraint = await this.GetTenantUniqueConstraintAsync(tenant.TenantId);
+            uniqueConstraint.Domain = tenant.Domain;
+
+            var updatedTenantStream = new TenantStream()
+            {
+                StreamId = currentTenantStream.StreamId,
+                Version = version,
+                Data = serializedNewTenantData,
+                Event = eventName,
+                InsertedAt = DateTime.UtcNow,
+                InsertedBy = userEmail
+            };
+
+            this.context.Update(uniqueConstraint);
+            this.context.TenantStreams.Add(updatedTenantStream);
+            try
+            {
+                await this.context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var postgresException = ex.InnerException as PostgresException;
+                if (postgresException.SqlState == "23505")
+                {
+                    var uniqueIndexViolation = postgresException.ConstraintName;
+                    switch (uniqueIndexViolation)
+                    {
+                        case TenantJsonbConstraintNames.Domain:
+                            {
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                            }
+                        case TenantJsonbConstraintNames.TenantId_Version:
+                            {
+                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentTenantStream.Version}' and the request update version was '{version}'.");
+                            }
+                        default:
+                            {
+                                throw new EventStreamDataConstraintException("");
+                            }
+                    }
+                }
+                throw;
+            }
+            return tenant;
+        }
+
+        private static void ValidateDataJsonInequality(TenantStream currentProjectStream, string serializedNewProjectData)
+        {
+            var currentJObject = JsonConvert.DeserializeObject<JObject>(currentProjectStream.Data);
+            var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewProjectData);
+            if (JToken.DeepEquals(currentJObject, requestJObject))
+            {
+                throw new NoOpException("No changes were made from the previous version.");
+            }
+        }
+
+        private static void ValidateRequestVersionIncremented(int version, TenantStream currentProjectStream)
+        {
+            if (version - currentProjectStream.Version > 1)
+            {
+                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'.");
+            }
+            if (version - currentProjectStream.Version <= 0)
+            {
+                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'.");
+            }
+        }
+
+        private async Task<TenantStream> GetTenantStreamByDomainAsync(string domain)
+        {
+            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'Domain' = {domain} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+        }
+
+        private void AddTenantUniqueConstraints(TenantStream tenantStream, Tenant tenant)
+        {
+            var domainUniqueConstraint = new TenantUniqueConstraint
+            {
+                TenantId = tenant.TenantId,
+                Domain = tenant.Domain
+            };
+            this.context.TenantUniqueConstraints.Add(domainUniqueConstraint);
+        }
+
+        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(Guid tenantId)
+        {
+
+            return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId);
+        }
+    }
+}

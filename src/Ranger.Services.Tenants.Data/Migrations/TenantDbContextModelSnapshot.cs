@@ -8,7 +8,7 @@ using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants.Data.Migrations
 {
-    [DbContext(typeof(TenantDbContext))]
+    [DbContext(typeof(TenantsDbContext))]
     partial class TenantDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
