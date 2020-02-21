@@ -17,5 +17,6 @@ namespace Ranger.Services.Tenants.Data
         public string Token { get; set; }
         public bool Enabled { get; set; } = false;
         public bool Deleted { get; set; } = false;
+        public PrimaryOwnerTransfer PrimaryOwnerTransfer { get; set; }
     }
 }

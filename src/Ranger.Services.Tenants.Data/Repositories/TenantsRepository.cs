@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
 
 namespace Ranger.Services.Tenants.Data
@@ -179,7 +180,133 @@ namespace Ranger.Services.Tenants.Data
             throw new System.NotImplementedException();
         }
 
-        public async Task<Tenant> UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant)
+        public async Task CompletePrimaryOwnerTransfer(string userEmail, string domain, PrimaryOwnerTransferStateEnum state)
+        {
+
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+            }
+            if (state is PrimaryOwnerTransferStateEnum.Pending)
+            {
+                throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status.");
+            }
+
+            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+
+            tenant.PrimaryOwnerTransfer.State = state;
+
+            var serializedTenantData = JsonConvert.SerializeObject(tenant);
+            var updatedTenantStream = new TenantStream()
+            {
+                StreamId = tenantStream.StreamId,
+                Version = tenantStream.Version + 1,
+                Data = serializedTenantData,
+                Event = $"PrimaryOwnerTransferClosed",
+                InsertedAt = DateTime.UtcNow,
+                InsertedBy = userEmail
+            };
+
+            this.context.TenantStreams.Add(updatedTenantStream);
+            try
+            {
+                await this.context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var postgresException = ex.InnerException as PostgresException;
+                if (postgresException.SqlState == "23505")
+                {
+                    var uniqueIndexViolation = postgresException.ConstraintName;
+                    switch (uniqueIndexViolation)
+                    {
+                        case TenantJsonbConstraintNames.Domain:
+                            {
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                            }
+                        case TenantJsonbConstraintNames.TenantId_Version:
+                            {
+                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'.");
+                            }
+                        default:
+                            {
+                                throw new EventStreamDataConstraintException("");
+                            }
+                    }
+                }
+                throw;
+            }
+
+        }
+
+        public async Task AddPrimaryOwnerTransfer(string userEmail, string domain, PrimaryOwnerTransfer transfer)
+        {
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+            }
+
+            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+
+            if (tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
+            {
+                throw new Exception("A primary owner transfer is currently pending.");
+            }
+            tenant.PrimaryOwnerTransfer = transfer;
+
+            var serializedTenantData = JsonConvert.SerializeObject(tenant);
+            var updatedTenantStream = new TenantStream()
+            {
+                StreamId = tenantStream.StreamId,
+                Version = tenantStream.Version + 1,
+                Data = serializedTenantData,
+                Event = "PrimaryOwnerTransferInitiated",
+                InsertedAt = DateTime.UtcNow,
+                InsertedBy = userEmail
+            };
+
+            this.context.TenantStreams.Add(updatedTenantStream);
+            try
+            {
+                await this.context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var postgresException = ex.InnerException as PostgresException;
+                if (postgresException.SqlState == "23505")
+                {
+                    var uniqueIndexViolation = postgresException.ConstraintName;
+                    switch (uniqueIndexViolation)
+                    {
+                        case TenantJsonbConstraintNames.Domain:
+                            {
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                            }
+                        case TenantJsonbConstraintNames.TenantId_Version:
+                            {
+                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'.");
+                            }
+                        default:
+                            {
+                                throw new EventStreamDataConstraintException("");
+                            }
+                    }
+                }
+                throw;
+            }
+        }
+
+        public async Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -203,6 +330,7 @@ namespace Ranger.Services.Tenants.Data
             tenant.CreatedOn = outdatedTenant.CreatedOn;
             tenant.DatabaseUsername = outdatedTenant.DatabaseUsername;
             tenant.DatabasePassword = outdatedTenant.DatabasePassword;
+            tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
             tenant.Deleted = false;
 
             var serializedNewTenantData = JsonConvert.SerializeObject(currentTenantStream.Data);
@@ -249,7 +377,6 @@ namespace Ranger.Services.Tenants.Data
                 }
                 throw;
             }
-            return tenant;
         }
 
         private static void ValidateDataJsonInequality(TenantStream currentProjectStream, string serializedNewProjectData)
