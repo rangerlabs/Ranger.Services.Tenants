@@ -17,8 +17,9 @@ namespace Ranger.Services.Tenants.Data
         private readonly IDataProtector dataProtector;
         private readonly ILogger<TenantsRepository> logger;
         private readonly TenantsDbContext context;
-        public TenantsRepository(ILogger<TenantsRepository> logger, IDataProtectionProvider dataProtectionProvider)
+        public TenantsRepository(TenantsDbContext context, ILogger<TenantsRepository> logger, IDataProtectionProvider dataProtectionProvider)
         {
+            this.context = context;
             this.logger = logger;
             this.dataProtector = dataProtectionProvider.CreateProtector(nameof(TenantsRepository));
         }
@@ -180,9 +181,8 @@ namespace Ranger.Services.Tenants.Data
             throw new System.NotImplementedException();
         }
 
-        public async Task CompletePrimaryOwnerTransfer(string userEmail, string domain, PrimaryOwnerTransferStateEnum state)
+        public async Task CompletePrimaryOwnerTransferAsync(string userEmail, string domain, PrimaryOwnerTransferStateEnum state)
         {
-
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
@@ -244,7 +244,7 @@ namespace Ranger.Services.Tenants.Data
 
         }
 
-        public async Task AddPrimaryOwnerTransfer(string userEmail, string domain, PrimaryOwnerTransfer transfer)
+        public async Task AddPrimaryOwnerTransferAsync(string userEmail, string domain, PrimaryOwnerTransfer transfer)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -258,9 +258,9 @@ namespace Ranger.Services.Tenants.Data
             var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
 
-            if (tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
+            if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
             {
-                throw new Exception("A primary owner transfer is currently pending.");
+                throw new ConcurrencyException("A primary owner transfer is currently pending.");
             }
             tenant.PrimaryOwnerTransfer = transfer;
 
@@ -333,7 +333,7 @@ namespace Ranger.Services.Tenants.Data
             tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
             tenant.Deleted = false;
 
-            var serializedNewTenantData = JsonConvert.SerializeObject(currentTenantStream.Data);
+            var serializedNewTenantData = JsonConvert.SerializeObject(tenant);
             var uniqueConstraint = await this.GetTenantUniqueConstraintAsync(tenant.TenantId);
             uniqueConstraint.Domain = tenant.Domain;
 

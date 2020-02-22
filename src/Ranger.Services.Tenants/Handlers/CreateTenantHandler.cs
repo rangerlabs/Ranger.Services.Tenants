@@ -25,15 +25,16 @@ namespace Ranger.Services.Tenants.Handlers
         {
             logger.LogInformation("Handling CreateTenant message.");
             var random = new Random();
+            var databasePassword = Crypto.GenerateSudoRandomPasswordString();
             var tenant = new Tenant()
             {
+                TenantId = Guid.NewGuid(),
                 CreatedOn = DateTime.UtcNow,
                 OrganizationName = command.OrganizationName,
                 Domain = command.Domain,
                 DatabaseUsername = Guid.NewGuid().ToString("N"),
-                DatabasePassword = Crypto.GenerateSudoRandomPasswordString(),
+                DatabasePassword = databasePassword,
                 Token = Crypto.GenerateSudoRandomAlphaNumericString(random.Next(64, 64)),
-                Enabled = false
             };
 
             try
@@ -48,7 +49,7 @@ namespace Ranger.Services.Tenants.Handlers
 
             logger.LogInformation($"Tenant created for domain: '{command.Domain}'.");
 
-            busPublisher.Publish<TenantCreated>(new TenantCreated(command.Domain, command.Email, command.FirstName, command.LastName, command.Password, command.OrganizationName, tenant.DatabaseUsername, tenant.DatabasePassword, tenant.Token), context);
+            busPublisher.Publish<TenantCreated>(new TenantCreated(command.Domain, command.Email, command.FirstName, command.LastName, command.Password, command.OrganizationName, tenant.DatabaseUsername, databasePassword, tenant.Token), context);
         }
     }
 }

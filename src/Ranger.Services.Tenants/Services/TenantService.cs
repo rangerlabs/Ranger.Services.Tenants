@@ -39,7 +39,7 @@ namespace Ranger.Services.Tenants
             {
                 tenant.Token = "";
                 tenant.Enabled = true;
-                await tenantRepository.UpdateTenantAsync("", "TenantConfirmed", 1, tenant);
+                await tenantRepository.UpdateTenantAsync("Anonymous", "TenantConfirmed", 1, tenant);
                 return TenantConfirmStatusEnum.Confirmed;
             }
             return TenantConfirmStatusEnum.InvalidToken;

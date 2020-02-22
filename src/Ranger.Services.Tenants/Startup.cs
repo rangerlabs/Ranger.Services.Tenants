@@ -93,9 +93,13 @@ namespace Ranger.Services.Tenants
 
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateTenant>((c, e) =>
-                   new CreateTenantRejected(e.Message, ""))
+                    new CreateTenantRejected(e.Message, ""))
                 .SubscribeCommand<DeleteTenant>((c, e) =>
-                    new DeleteTenantRejected(e.Message, ""));
+                    new DeleteTenantRejected(e.Message, ""))
+                .SubscribeCommand<InitiatePrimaryOwnerTransfer>((c, e) =>
+                    new InitiatePrimaryOwnerTransferRejected(e.Message, ""))
+                .SubscribeCommand<CompletePrimaryOwnerTransfer>((c, e) =>
+                    new CompletePrimaryOwnerTransferRejected(e.Message, ""));
         }
 
         private void OnShutdown()

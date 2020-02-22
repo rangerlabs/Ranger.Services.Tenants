@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ranger.Services.Tenants.Data;
@@ -9,14 +10,15 @@ using Ranger.Services.Tenants.Data;
 namespace Ranger.Services.Tenants.Data.Migrations
 {
     [DbContext(typeof(TenantsDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200221110058_AddJsonbIndices")]
+    partial class AddJsonbIndices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
-                .HasAnnotation("ProductVersion", "3.1.0")
+                .HasAnnotation("ProductVersion", "3.1.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -41,7 +43,7 @@ namespace Ranger.Services.Tenants.Data.Migrations
                     b.ToTable("data_protection_keys");
                 });
 
-            modelBuilder.Entity("Ranger.Services.Tenants.Data.Tenant", b =>
+            modelBuilder.Entity("Ranger.Services.Tenants.Data.TenantStream", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,19 +51,44 @@ namespace Ranger.Services.Tenants.Data.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnName("created_on")
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnName("data")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnName("event")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnName("inserted_at")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("DatabasePassword")
+                    b.Property<string>("InsertedBy")
                         .IsRequired()
-                        .HasColumnName("database_password")
+                        .HasColumnName("inserted_by")
                         .HasColumnType("text");
 
-                    b.Property<string>("DatabaseUsername")
-                        .IsRequired()
-                        .HasColumnName("database_username")
-                        .HasColumnType("text");
+                    b.Property<Guid>("StreamId")
+                        .HasColumnName("stream_id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .HasColumnName("version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tenant_streams");
+
+                    b.ToTable("tenant_streams");
+                });
+
+            modelBuilder.Entity("Ranger.Services.Tenants.Data.TenantUniqueConstraint", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnName("tenant_id")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Domain")
                         .IsRequired()
@@ -69,36 +96,16 @@ namespace Ranger.Services.Tenants.Data.Migrations
                         .HasColumnType("character varying(28)")
                         .HasMaxLength(28);
 
-                    b.Property<bool>("Enabled")
-                        .HasColumnName("enabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastAccessed")
-                        .HasColumnName("last_accessed")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("OrganizationName")
-                        .IsRequired()
-                        .HasColumnName("organization_name")
-                        .HasColumnType("character varying(28)")
-                        .HasMaxLength(28);
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnName("token")
-                        .HasColumnType("character varying(64)")
-                        .HasMaxLength(64);
-
-                    b.HasKey("Id")
-                        .HasName("pk_tenants");
-
-                    b.HasIndex("DatabaseUsername")
-                        .IsUnique();
+                    b.HasKey("TenantId")
+                        .HasName("pk_tenant_unique_constraints");
 
                     b.HasIndex("Domain")
                         .IsUnique();
 
-                    b.ToTable("tenants");
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("tenant_unique_constraints");
                 });
 #pragma warning restore 612, 618
         }

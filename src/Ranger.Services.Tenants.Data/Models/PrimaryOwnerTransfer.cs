@@ -18,7 +18,7 @@ namespace Ranger.Services.Tenants.Data
         public string TransferingToEmail { get; set; }
         public PrimaryOwnerTransferStateEnum State { get; set; }
 
-        public static PrimaryOwnerTransfer Create(DateTime initiatedAt, string initiatedByEmail, string transferingToEmail, PrimaryOwnerTransferStateEnum state)
+        public static PrimaryOwnerTransfer Create(string initiatedByEmail, string transferingToEmail)
         {
             return new PrimaryOwnerTransfer(DateTime.UtcNow, initiatedByEmail, transferingToEmail, PrimaryOwnerTransferStateEnum.Pending);
         }
