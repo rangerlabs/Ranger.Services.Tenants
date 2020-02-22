@@ -24,7 +24,7 @@ namespace Ranger.Services.Tenants.Handlers
         public async Task HandleAsync(InitiatePrimaryOwnerTransfer message, ICorrelationContext context)
         {
             logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message.");
-            var primaryOwnerTransfer = PrimaryOwnerTransfer.Create(message.CommandingUserEmail, message.TransferUserEmail);
+            var primaryOwnerTransfer = PrimaryOwnerTransfer.Create(message.CommandingUserEmail, message.TransferUserEmail, context.ConnectionId);
             try
             {
                 await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Domain, primaryOwnerTransfer);
