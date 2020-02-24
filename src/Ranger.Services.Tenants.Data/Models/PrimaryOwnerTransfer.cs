@@ -5,7 +5,7 @@ namespace Ranger.Services.Tenants.Data
 {
     public class PrimaryOwnerTransfer
     {
-        public PrimaryOwnerTransfer(DateTime initiatedAt, string initiatedByEmail, string transferingToEmail, PrimaryOwnerTransferStateEnum state, string correlationId)
+        public PrimaryOwnerTransfer(DateTime initiatedAt, string initiatedByEmail, string transferingToEmail, PrimaryOwnerTransferStateEnum state, Guid correlationId)
         {
             this.InitiatedAt = initiatedAt;
             this.InitiatedByEmail = initiatedByEmail;
@@ -18,9 +18,9 @@ namespace Ranger.Services.Tenants.Data
         public string InitiatedByEmail { get; set; }
         public string TransferingToEmail { get; set; }
         public PrimaryOwnerTransferStateEnum State { get; set; }
-        public string CorrelationId { get; set; }
+        public Guid CorrelationId { get; set; }
 
-        public static PrimaryOwnerTransfer Create(string initiatedByEmail, string transferingToEmail, string correlationId)
+        public static PrimaryOwnerTransfer Create(string initiatedByEmail, string transferingToEmail, Guid correlationId)
         {
             return new PrimaryOwnerTransfer(DateTime.UtcNow, initiatedByEmail, transferingToEmail, PrimaryOwnerTransferStateEnum.Pending, correlationId);
         }

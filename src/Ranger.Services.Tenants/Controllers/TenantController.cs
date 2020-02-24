@@ -93,6 +93,27 @@ namespace Ranger.Services.Tenants
             return Ok(new TenantEnabledModel { Enabled = tenant.Enabled });
         }
 
+        [HttpGet("/tenant/{domain}/primary-owner-transfer")]
+        public async Task<IActionResult> GetPrimaryOwnerTransfer(string domain)
+        {
+            if (String.IsNullOrWhiteSpace(domain))
+            {
+                var errors = new ApiErrorContent();
+                errors.Errors.Add($"{nameof(domain)} cannot be null or empty.");
+                return BadRequest(errors);
+            }
+            Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
+            if (tenant is null)
+            {
+                return NotFound();
+            }
+            if (tenant.PrimaryOwnerTransfer is null || (!(tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending) || tenant.PrimaryOwnerTransfer.InitiatedAt.Add(TimeSpan.FromDays(1)) <= DateTime.UtcNow))
+            {
+                return NoContent();
+            }
+            return Ok(new { CorrelationId = tenant.PrimaryOwnerTransfer.CorrelationId, TransferTo = tenant.PrimaryOwnerTransfer.TransferingToEmail });
+        }
+
         [HttpPut("tenant/{domain}/confirm")]
         public async Task<IActionResult> Confirm(string domain, ConfirmModel confirmModel)
         {
