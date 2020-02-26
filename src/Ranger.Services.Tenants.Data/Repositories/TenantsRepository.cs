@@ -87,11 +87,12 @@ namespace Ranger.Services.Tenants.Data
             }
             domain = domain.ToLowerInvariant();
 
-            var currentTenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
             if (!(currentTenantStream is null))
             {
                 var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
                 currentTenant.Deleted = true;
+                currentTenant.Enabled = false;
                 var deleted = false;
                 var maxConcurrencyAttempts = 3;
                 while (!deleted && maxConcurrencyAttempts != 0)
@@ -150,17 +151,40 @@ namespace Ranger.Services.Tenants.Data
             return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
         }
 
-        public async Task<Tenant> FindTenantByDomainAsync(string domain)
+        public async Task<Tenant> FindNotDeletedTenantByDomainAsync(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
                 throw new ArgumentException("message", nameof(domain));
             }
 
-            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
-            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-            tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
-            return tenant;
+            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            if (!(tenantStream is null))
+            {
+                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+                tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+                return tenant;
+            }
+            return null;
+        }
+
+        public async Task<(bool exists, bool enabled)> IsTenantEnabledAsync(string domain)
+        {
+            if (string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException("message", nameof(domain));
+            }
+
+            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            if (!(tenantStream is null))
+            {
+                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+                if (!tenant.Deleted)
+                {
+                    return (true, tenant.Enabled);
+                }
+            }
+            return (false, false);
         }
 
         public async Task<Tenant> FindTenantByDatabaseUsernameAsync(string databaseUsername)
@@ -196,7 +220,7 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status.");
             }
 
-            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
 
             tenant.PrimaryOwnerTransfer.State = state;
@@ -255,7 +279,7 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
             }
 
-            var tenantStream = await this.GetTenantStreamByDomainAsync(domain);
+            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
 
             if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
@@ -322,7 +346,7 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException($"{nameof(tenant)} was null.");
             }
 
-            var currentTenantStream = await this.GetTenantStreamByDomainAsync(tenant.Domain);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(tenant.Domain);
             ValidateRequestVersionIncremented(version, currentTenantStream);
 
             var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
@@ -401,9 +425,14 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        private async Task<TenantStream> GetTenantStreamByDomainAsync(string domain)
+        private async Task<TenantStream> GetNotDeletedTenantStreamByDomainAsync(string domain)
         {
-            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'Domain' = {domain} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var tenantId = (await this.context.TenantUniqueConstraints.Where(_ => _.Domain == domain.ToLowerInvariant()).SingleOrDefaultAsync())?.TenantId;
+            if (tenantId is null)
+            {
+                return null;
+            }
+            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId.ToString()} ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         private void AddTenantUniqueConstraints(TenantStream tenantStream, Tenant tenant)

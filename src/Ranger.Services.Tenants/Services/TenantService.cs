@@ -25,7 +25,7 @@ namespace Ranger.Services.Tenants
                 throw new System.ArgumentException($"'{nameof(token)}' was null or whitespace.");
             }
 
-            Tenant tenant = await tenantRepository.FindTenantByDomainAsync(domain);
+            Tenant tenant = await tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 return TenantConfirmStatusEnum.TenantNotFound;

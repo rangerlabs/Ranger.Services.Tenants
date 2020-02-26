@@ -28,7 +28,7 @@ namespace Ranger.Services.Tenants.Handlers
             logger.LogInformation("Handling DeleteTenant message.");
             try
             {
-                tenant = await this.tenantRepository.FindTenantByDomainAsync(command.Domain);
+                tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.Domain);
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace Ranger.Services.Tenants.Handlers
                 throw new RangerException("Failed to delete the tenant. No additional data could be provided.");
             }
             logger.LogInformation($"Tenant domain deleted: '{command.Domain}'.");
-            busPublisher.Publish(new TenantDeleted(command.Domain), context);
+            busPublisher.Publish(new TenantDeleted(command.Domain, tenant.OrganizationName), context);
         }
     }
 }

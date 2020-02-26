@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -47,7 +46,7 @@ namespace Ranger.Services.Tenants
             {
                 return BadRequest(new { errors = $"{nameof(domain)} cannot be null or empty." });
             }
-            Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
+            Tenant tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 var errors = new ApiErrorContent();
@@ -85,12 +84,12 @@ namespace Ranger.Services.Tenants
                 errors.Errors.Add($"{nameof(domain)} cannot be null or empty.");
                 return BadRequest(errors);
             }
-            Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
-            if (tenant is null)
+            var (exists, enabled) = await this.tenantRepository.IsTenantEnabledAsync(domain);
+            if (!exists)
             {
                 return NotFound();
             }
-            return Ok(new TenantEnabledModel { Enabled = tenant.Enabled });
+            return Ok(new TenantEnabledModel { Enabled = enabled });
         }
 
         [HttpGet("/tenant/{domain}/primary-owner-transfer")]
@@ -102,7 +101,7 @@ namespace Ranger.Services.Tenants
                 errors.Errors.Add($"{nameof(domain)} cannot be null or empty.");
                 return BadRequest(errors);
             }
-            Tenant tenant = await this.tenantRepository.FindTenantByDomainAsync(domain);
+            Tenant tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 return NotFound();
