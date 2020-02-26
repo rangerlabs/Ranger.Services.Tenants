@@ -30,7 +30,7 @@ namespace Ranger.Services.Tenants
 
             using (var scope = host.Services.CreateScope())
             {
-                var dbInitializer = scope.ServiceProvider.GetRequiredService<ITenantDbContextInitializer>();
+                var dbInitializer = scope.ServiceProvider.GetRequiredService<ITenantsDbContextInitializer>();
                 var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
                 dbInitializer.Migrate();

@@ -5,11 +5,23 @@ namespace Ranger.Services.Tenants
     [MessageNamespace("tenants")]
     public class TenantDeleted : IEvent
     {
-        public TenantDeleted(string domainName)
+        public TenantDeleted(string domainName, string organizationName)
         {
-            this.DomainName = domainName;
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                throw new System.ArgumentException($"{nameof(domainName)} was null or whitespace.");
+            }
 
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                throw new System.ArgumentException($"{nameof(organizationName)} was null or whitespace.");
+            }
+
+            this.DomainName = domainName;
+            this.OrganizationName = organizationName;
         }
+
         public string DomainName { get; }
+        public string OrganizationName { get; }
     }
 }

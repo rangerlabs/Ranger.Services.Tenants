@@ -1,1 +1,1 @@
-dotnet ef migrations add $1 -p ./src/Ranger.Services.Tenants.Data/Ranger.Services.Tenants.Data.csproj -c TenantDbContext -s ./src/Ranger.Services.Tenants/Ranger.Services.Tenants.csproj 
+dotnet ef migrations add $1 -p ./src/Ranger.Services.Tenants.Data/Ranger.Services.Tenants.Data.csproj -c TenantsDbContext -s ./src/Ranger.Services.Tenants/Ranger.Services.Tenants.csproj 

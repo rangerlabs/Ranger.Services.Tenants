@@ -4,11 +4,11 @@ using Ranger.Services.Tenants.Data;
 namespace Ranger.Services.Tenants
 {
 
-    public class TenantService : ITenantService
+    public class TenantsService : ITenantService
     {
-        private readonly ITenantRepository tenantRepository;
+        private readonly ITenantsRepository tenantRepository;
 
-        public TenantService(ITenantRepository tenantRepository)
+        public TenantsService(ITenantsRepository tenantRepository)
         {
             this.tenantRepository = tenantRepository;
         }
@@ -25,7 +25,7 @@ namespace Ranger.Services.Tenants
                 throw new System.ArgumentException($"'{nameof(token)}' was null or whitespace.");
             }
 
-            Tenant tenant = await tenantRepository.FindTenantByDomainAsync(domain);
+            Tenant tenant = await tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 return TenantConfirmStatusEnum.TenantNotFound;
@@ -39,7 +39,7 @@ namespace Ranger.Services.Tenants
             {
                 tenant.Token = "";
                 tenant.Enabled = true;
-                await tenantRepository.UpdateTenantAsync(tenant);
+                await tenantRepository.UpdateTenantAsync("Anonymous", "TenantConfirmed", 1, tenant);
                 return TenantConfirmStatusEnum.Confirmed;
             }
             return TenantConfirmStatusEnum.InvalidToken;

@@ -23,35 +23,45 @@ namespace Ranger.Services.Tenants.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tenants",
+                name: "tenant_streams",
                 columns: table => new
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    created_on = table.Column<DateTime>(nullable: false),
-                    last_accessed = table.Column<DateTime>(nullable: true),
-                    organization_name = table.Column<string>(maxLength: 28, nullable: false),
-                    domain = table.Column<string>(maxLength: 28, nullable: false),
-                    database_username = table.Column<string>(nullable: false),
-                    database_password = table.Column<string>(nullable: false),
-                    token = table.Column<string>(maxLength: 64, nullable: false),
-                    enabled = table.Column<bool>(nullable: false)
+                    stream_id = table.Column<Guid>(nullable: false),
+                    version = table.Column<int>(nullable: false),
+                    data = table.Column<string>(type: "jsonb", nullable: false),
+                    @event = table.Column<string>(name: "event", nullable: false),
+                    inserted_at = table.Column<DateTime>(nullable: false),
+                    inserted_by = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_tenants", x => x.id);
+                    table.PrimaryKey("pk_tenant_streams", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tenant_unique_constraints",
+                columns: table => new
+                {
+                    tenant_id = table.Column<Guid>(nullable: false),
+                    domain = table.Column<string>(maxLength: 28, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_tenant_unique_constraints", x => x.tenant_id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_tenants_database_username",
-                table: "tenants",
-                column: "database_username",
+                name: "IX_tenant_unique_constraints_domain",
+                table: "tenant_unique_constraints",
+                column: "domain",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tenants_domain",
-                table: "tenants",
-                column: "domain",
+                name: "IX_tenant_unique_constraints_tenant_id",
+                table: "tenant_unique_constraints",
+                column: "tenant_id",
                 unique: true);
         }
 
@@ -61,7 +71,10 @@ namespace Ranger.Services.Tenants.Data.Migrations
                 name: "data_protection_keys");
 
             migrationBuilder.DropTable(
-                name: "tenants");
+                name: "tenant_streams");
+
+            migrationBuilder.DropTable(
+                name: "tenant_unique_constraints");
         }
     }
 }
