@@ -10,7 +10,7 @@ using Ranger.Services.Tenants.Data;
 namespace Ranger.Services.Tenants.Data.Migrations
 {
     [DbContext(typeof(TenantsDbContext))]
-    [Migration("20200221110019_Initial")]
+    [Migration("20200410020435_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,9 +86,10 @@ namespace Ranger.Services.Tenants.Data.Migrations
 
             modelBuilder.Entity("Ranger.Services.Tenants.Data.TenantUniqueConstraint", b =>
                 {
-                    b.Property<Guid>("TenantId")
+                    b.Property<string>("TenantId")
                         .HasColumnName("tenant_id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("character varying(36)")
+                        .HasMaxLength(36);
 
                     b.Property<string>("Domain")
                         .IsRequired()

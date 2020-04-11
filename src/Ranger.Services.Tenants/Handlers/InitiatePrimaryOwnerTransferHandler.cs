@@ -27,7 +27,7 @@ namespace Ranger.Services.Tenants.Handlers
             var primaryOwnerTransfer = PrimaryOwnerTransfer.Create(message.CommandingUserEmail, message.TransferUserEmail, context.CorrelationContextId);
             try
             {
-                await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Domain, primaryOwnerTransfer);
+                await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.TenantId, primaryOwnerTransfer);
             }
             catch (ConcurrencyException ex)
             {

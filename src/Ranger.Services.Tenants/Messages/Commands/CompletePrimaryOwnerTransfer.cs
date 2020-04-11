@@ -7,11 +7,11 @@ namespace Ranger.Services.Tenants
     [MessageNamespace("tenants")]
     public class CompletePrimaryOwnerTransfer : ICommand
     {
-        public CompletePrimaryOwnerTransfer(string domain, string commandingUserEmail, PrimaryOwnerTransferStateEnum state)
+        public CompletePrimaryOwnerTransfer(string tenantId, string commandingUserEmail, PrimaryOwnerTransferStateEnum state)
         {
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(commandingUserEmail))
             {
@@ -22,11 +22,11 @@ namespace Ranger.Services.Tenants
                 throw new ArgumentException("'Pending' is an invalid status to complete a Primary Owner Transfer.");
             }
 
-            this.Domain = domain;
+            this.Tenantid = tenantId;
             this.CommandingUserEmail = commandingUserEmail;
             this.State = state;
         }
-        public string Domain { get; }
+        public string Tenantid { get; }
         public string CommandingUserEmail { get; }
         public PrimaryOwnerTransferStateEnum State { get; }
     }

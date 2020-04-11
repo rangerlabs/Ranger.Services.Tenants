@@ -26,7 +26,7 @@ namespace Ranger.Services.Tenants.Handlers
             logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message.");
             try
             {
-                await tenantsRepository.CompletePrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Domain, message.State);
+                await tenantsRepository.CompletePrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Tenantid, message.State);
             }
             catch (ConcurrencyException ex)
             {

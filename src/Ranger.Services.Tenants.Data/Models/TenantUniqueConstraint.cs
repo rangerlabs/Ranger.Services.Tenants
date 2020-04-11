@@ -7,8 +7,9 @@ namespace Ranger.Services.Tenants.Data
     public class TenantUniqueConstraint
     {
         [Key]
+        [StringLength(36)]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public Guid TenantId { get; set; }
+        public string TenantId { get; set; }
 
         [Required]
         [StringLength(28, MinimumLength = 3)]

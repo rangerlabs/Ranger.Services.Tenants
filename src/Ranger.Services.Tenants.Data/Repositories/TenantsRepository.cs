@@ -92,7 +92,7 @@ namespace Ranger.Services.Tenants.Data
             {
                 var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
                 currentTenant.Deleted = true;
-                currentTenant.Enabled = false;
+                currentTenant.Confirmed = false;
                 var deleted = false;
                 var maxConcurrencyAttempts = 3;
                 while (!deleted && maxConcurrencyAttempts != 0)
@@ -168,7 +168,7 @@ namespace Ranger.Services.Tenants.Data
             return null;
         }
 
-        public async Task<(bool exists, bool enabled)> IsTenantEnabledAsync(string domain)
+        public async Task<(bool exists, bool confirmed)> IsTenantConfirmedAsync(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
@@ -181,20 +181,20 @@ namespace Ranger.Services.Tenants.Data
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
                 if (!tenant.Deleted)
                 {
-                    return (true, tenant.Enabled);
+                    return (true, tenant.Confirmed);
                 }
             }
             return (false, false);
         }
 
-        public async Task<Tenant> FindTenantByDatabaseUsernameAsync(string databaseUsername)
+        public async Task<Tenant> FindTenantByTenantIdAsync(string TenantId)
         {
-            if (string.IsNullOrWhiteSpace(databaseUsername))
+            if (string.IsNullOrWhiteSpace(TenantId))
             {
-                throw new ArgumentException("message", nameof(databaseUsername));
+                throw new ArgumentException("message", nameof(TenantId));
             }
 
-            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'DatabaseUsername' = {databaseUsername} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {TenantId} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
             tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
             return tenant;
@@ -352,7 +352,7 @@ namespace Ranger.Services.Tenants.Data
             var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
             tenant.TenantId = outdatedTenant.TenantId; //Domain is used externally as the Id
             tenant.CreatedOn = outdatedTenant.CreatedOn;
-            tenant.DatabaseUsername = outdatedTenant.DatabaseUsername;
+            tenant.TenantId = outdatedTenant.TenantId;
             tenant.DatabasePassword = outdatedTenant.DatabasePassword;
             tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
             tenant.Deleted = false;
@@ -445,7 +445,7 @@ namespace Ranger.Services.Tenants.Data
             this.context.TenantUniqueConstraints.Add(domainUniqueConstraint);
         }
 
-        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(Guid tenantId)
+        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(string tenantId)
         {
 
             return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId);

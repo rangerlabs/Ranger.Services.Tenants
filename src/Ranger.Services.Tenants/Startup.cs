@@ -1,16 +1,17 @@
-﻿using System;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using Autofac;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Ranger.AutoWrapper;
 using Ranger.RabbitMQ;
 using Ranger.Services.Tenants.Data;
 
@@ -46,9 +47,12 @@ namespace Ranger.Services.Tenants
                     policyBuilder.RequireScope("tenantsApi");
                 }
             ));
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Tenants API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
 
-            services.AddEntityFrameworkNpgsql().AddDbContext<TenantsDbContext>(options =>
+            services.AddDbContext<TenantsDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
@@ -84,6 +88,8 @@ namespace Ranger.Services.Tenants
 
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
+            app.UseSwagger("v1", "Tenants API");
+            app.UseAutoWrapper();
             app.UseRouting();
             app.UseAuthentication();
             app.UseEndpoints(endpoints =>
