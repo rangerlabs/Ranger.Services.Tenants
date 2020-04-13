@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
-using Ranger.AutoWrapper;
+using Ranger.ApiUtilities;
 using Ranger.RabbitMQ;
 using Ranger.Services.Tenants.Data;
 
