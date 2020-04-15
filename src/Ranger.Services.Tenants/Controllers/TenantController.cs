@@ -126,7 +126,7 @@ namespace Ranger.Services.Tenants
             {
                 TenantConfirmStatusEnum.InvalidToken => throw new ApiException($"The registration key is invalid. Failed to confirm the domain", statusCode: StatusCodes.Status400BadRequest),
                 TenantConfirmStatusEnum.TenantNotFound => throw new ApiException($"No tenant was found for the specified domain", statusCode: StatusCodes.Status404NotFound),
-                TenantConfirmStatusEnum.Confirmed => new ApiResponse($"Successfully retrieved primary owner transfer", statusCode: StatusCodes.Status200OK),
+                TenantConfirmStatusEnum.Confirmed => new ApiResponse($"Successfully confirmed the tenant's domain", statusCode: StatusCodes.Status200OK),
                 TenantConfirmStatusEnum.PreviouslyConfirmed => new ApiResponse($"The tenant was previously confirmed", statusCode: StatusCodes.Status200OK),
                 _ => throw new ApiException($"Unable to determine whether the tenant was confirmed", StatusCodes.Status500InternalServerError)
             };

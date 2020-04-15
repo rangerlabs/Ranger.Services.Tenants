@@ -187,14 +187,14 @@ namespace Ranger.Services.Tenants.Data
             return (false, false);
         }
 
-        public async Task<Tenant> FindTenantByTenantIdAsync(string TenantId)
+        public async Task<Tenant> FindTenantByTenantIdAsync(string tenantId)
         {
-            if (string.IsNullOrWhiteSpace(TenantId))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException("message", nameof(TenantId));
+                throw new ArgumentException("message", nameof(tenantId));
             }
 
-            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {TenantId} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
             tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
             return tenant;
