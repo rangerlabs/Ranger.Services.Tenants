@@ -195,9 +195,13 @@ namespace Ranger.Services.Tenants.Data
             }
 
             var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
-            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-            tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
-            return tenant;
+            if (!(tenantStream is null))
+            {
+                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+                tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+                return tenant;
+            }
+            return null;
         }
 
         public Task UpdateLastAccessed(string domain)

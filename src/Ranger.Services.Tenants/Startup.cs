@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.RabbitMQ;
@@ -41,16 +42,10 @@ namespace Ranger.Services.Tenants
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
-            services.AddAuthorization(options =>
-                options.AddPolicy("tenantPolicy", policyBuilder =>
-                {
-                    policyBuilder.RequireScope("tenantsApi");
-                }
-            ));
-            services.AddAutoWrapper();
+
+            // services.AddAutoWrapper();
             services.AddSwaggerGen("Tenants API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
-
 
             services.AddDbContext<TenantsDbContext>(options =>
             {
@@ -62,13 +57,12 @@ namespace Ranger.Services.Tenants
             services.AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
             services.AddTransient<ITenantService, TenantsService>();
             services.AddTransient<ITenantsRepository, TenantsRepository>();
-
+            IdentityModelEventSource.ShowPII = true;
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "tenantsApi";
-
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -90,8 +84,12 @@ namespace Ranger.Services.Tenants
 
             app.UseSwagger("v1", "Tenants API");
             app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

@@ -7,11 +7,11 @@ namespace Ranger.Services.Tenants
     public class CreateTenant : ICommand
     {
 
-        public CreateTenant(string tenantId, string organizationName, string email, string firstName, string lastName, string password)
+        public CreateTenant(string domain, string organizationName, string email, string firstName, string lastName, string password)
         {
-            if (string.IsNullOrWhiteSpace(tenantId))
+            if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(organizationName))
             {
@@ -33,7 +33,7 @@ namespace Ranger.Services.Tenants
             {
                 throw new System.ArgumentException($"{nameof(password)} was null or whitespace.");
             }
-            this.TenantId = tenantId;
+            this.Domain = domain;
             this.OrganizationName = organizationName;
             this.Email = email;
             this.FirstName = firstName;
@@ -41,7 +41,7 @@ namespace Ranger.Services.Tenants
             this.Password = password;
 
         }
-        public string TenantId { get; }
+        public string Domain { get; }
         public string OrganizationName { get; }
         public string Email { get; }
         public string FirstName { get; }
