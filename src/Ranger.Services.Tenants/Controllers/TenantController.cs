@@ -39,7 +39,7 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(tenantId) && string.IsNullOrWhiteSpace(domain))
             {
-                throw new ApiException(new RangerApiError($"Must provide a tenantId or domain query string parameter"), StatusCodes.Status400BadRequest);
+                throw new ApiException($"Must provide a tenantId or domain query string parameter", StatusCodes.Status400BadRequest);
             }
             Tenant tenant = null;
             if (string.IsNullOrWhiteSpace(tenantId))
@@ -52,7 +52,7 @@ namespace Ranger.Services.Tenants
             }
             if (tenant is null)
             {
-                throw new ApiException(new RangerApiError("No tenant was found for the specified tenant id"), StatusCodes.Status404NotFound);
+                throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
             }
             return new ApiResponse($"Successfully retrieved tenant", result: tenant, statusCode: StatusCodes.Status200OK);
         }
@@ -74,7 +74,7 @@ namespace Ranger.Services.Tenants
             {
                 var message = "An error occurred determining tenant existence";
                 logger.LogError(ex, message);
-                throw new ApiException(new RangerApiError(message), statusCode: StatusCodes.Status500InternalServerError);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -90,7 +90,7 @@ namespace Ranger.Services.Tenants
             var (exists, confirmed) = await this.tenantRepository.IsTenantConfirmedAsync(domain);
             if (!exists)
             {
-                throw new ApiException(new RangerApiError("No tenant was found for the specified tenant id"), StatusCodes.Status404NotFound);
+                throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
             }
             return new ApiResponse($"Successfully determined domain confirmation ", result: confirmed, statusCode: StatusCodes.Status200OK);
         }
@@ -107,11 +107,11 @@ namespace Ranger.Services.Tenants
             Tenant tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
-                throw new ApiException(new RangerApiError("No tenant was found for the specified tenant id"), StatusCodes.Status404NotFound);
+                throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
             }
             if (tenant.PrimaryOwnerTransfer is null || (!(tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending) || tenant.PrimaryOwnerTransfer.InitiatedAt.Add(TimeSpan.FromDays(1)) <= DateTime.UtcNow))
             {
-                throw new ApiException(new RangerApiError("There is no pending primary owner transfer"), StatusCodes.Status404NotFound);
+                throw new ApiException("There is no pending primary owner transfer", StatusCodes.Status404NotFound);
             }
             var result = new { CorrelationId = tenant.PrimaryOwnerTransfer.CorrelationId, TransferTo = tenant.PrimaryOwnerTransfer.TransferingToEmail };
             return new ApiResponse($"Successfully retrieved primary owner transfer", result: result, statusCode: StatusCodes.Status200OK);
@@ -131,8 +131,8 @@ namespace Ranger.Services.Tenants
             TenantConfirmStatusEnum status = await tenantService.ConfirmTenantAsync(domain, confirmModel.Token);
             return status switch
             {
-                TenantConfirmStatusEnum.InvalidToken => throw new ApiException(new RangerApiError("The registration key is invalid. Failed to confirm the domain"), StatusCodes.Status400BadRequest),
-                TenantConfirmStatusEnum.TenantNotFound => throw new ApiException(new RangerApiError("No tenant was found for the specified tenant id"), StatusCodes.Status404NotFound),
+                TenantConfirmStatusEnum.InvalidToken => throw new ApiException("The registration key is invalid. Failed to confirm the domain", StatusCodes.Status400BadRequest),
+                TenantConfirmStatusEnum.TenantNotFound => throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound),
                 TenantConfirmStatusEnum.Confirmed => new ApiResponse($"Successfully confirmed the tenant's domain", statusCode: StatusCodes.Status200OK),
                 TenantConfirmStatusEnum.PreviouslyConfirmed => new ApiResponse($"The tenant was previously confirmed", statusCode: StatusCodes.Status200OK),
                 _ => throw new ApiException(new RangerApiError($"Unable to determine whether the tenant was confirmed"), StatusCodes.Status500InternalServerError)
