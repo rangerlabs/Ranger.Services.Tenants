@@ -28,11 +28,11 @@ namespace Ranger.Services.Tenants.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (tenant is null)
             {
-                throw new ArgumentNullException($"{nameof(tenant)} was null.");
+                throw new ArgumentNullException($"{nameof(tenant)} was null");
             }
 
             tenant.Domain = tenant.Domain.ToLowerInvariant();
@@ -62,7 +62,7 @@ namespace Ranger.Services.Tenants.Data
                     {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
                             }
                         default:
                             {
@@ -78,12 +78,12 @@ namespace Ranger.Services.Tenants.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
 
             if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
             }
             domain = domain.ToLowerInvariant();
 
@@ -113,7 +113,7 @@ namespace Ranger.Services.Tenants.Data
                     {
                         await this.context.SaveChangesAsync();
                         deleted = true;
-                        logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted.");
+                        logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted");
                     }
                     catch (DbUpdateException ex)
                     {
@@ -125,7 +125,7 @@ namespace Ranger.Services.Tenants.Data
                             {
                                 case TenantJsonbConstraintNames.TenantId_Version:
                                     {
-                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentTenantStream.Version + 1}'.");
+                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentTenantStream.Version + 1}'");
                                         maxConcurrencyAttempts--;
                                         continue;
                                     }
@@ -136,12 +136,12 @@ namespace Ranger.Services.Tenants.Data
                 }
                 if (!deleted)
                 {
-                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted.");
+                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted");
                 }
             }
             else
             {
-                throw new ArgumentException($"No tenant was found with domain '{domain}'.");
+                throw new ArgumentException($"No tenant was found with domain '{domain}'");
             }
         }
 
@@ -213,15 +213,15 @@ namespace Ranger.Services.Tenants.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
             }
             if (state is PrimaryOwnerTransferStateEnum.Pending)
             {
-                throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status.");
+                throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status");
             }
 
             var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
@@ -255,11 +255,11 @@ namespace Ranger.Services.Tenants.Data
                     {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'.");
+                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
                             }
                         default:
                             {
@@ -276,11 +276,11 @@ namespace Ranger.Services.Tenants.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
             }
 
             var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
@@ -288,7 +288,7 @@ namespace Ranger.Services.Tenants.Data
 
             if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
             {
-                throw new ConcurrencyException("A primary owner transfer is currently pending.");
+                throw new ConcurrencyException("A primary owner transfer is currently pending");
             }
             tenant.PrimaryOwnerTransfer = transfer;
 
@@ -318,11 +318,11 @@ namespace Ranger.Services.Tenants.Data
                     {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'.");
+                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
                             }
                         default:
                             {
@@ -338,16 +338,16 @@ namespace Ranger.Services.Tenants.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
 
             if (string.IsNullOrWhiteSpace(eventName))
             {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
             }
             if (tenant is null)
             {
-                throw new ArgumentException($"{nameof(tenant)} was null.");
+                throw new ArgumentException($"{nameof(tenant)} was null");
             }
 
             var currentTenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(tenant.Domain);
@@ -391,11 +391,11 @@ namespace Ranger.Services.Tenants.Data
                     {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant.");
+                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentTenantStream.Version}' and the request update version was '{version}'.");
+                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentTenantStream.Version}' and the request update version was '{version}'");
                             }
                         default:
                             {
@@ -413,7 +413,7 @@ namespace Ranger.Services.Tenants.Data
             var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewProjectData);
             if (JToken.DeepEquals(currentJObject, requestJObject))
             {
-                throw new NoOpException("No changes were made from the previous version.");
+                throw new NoOpException("No changes were made from the previous version");
             }
         }
 
@@ -421,11 +421,11 @@ namespace Ranger.Services.Tenants.Data
         {
             if (version - currentProjectStream.Version > 1)
             {
-                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'");
             }
             if (version - currentProjectStream.Version <= 0)
             {
-                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'");
             }
         }
 

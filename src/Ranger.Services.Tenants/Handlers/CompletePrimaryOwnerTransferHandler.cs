@@ -23,19 +23,19 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(CompletePrimaryOwnerTransfer message, ICorrelationContext context)
         {
-            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message.");
+            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
             try
             {
                 await tenantsRepository.CompletePrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Tenantid, message.State);
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogError(ex, "Failed to complete the primary owner transfer.");
+                logger.LogError(ex, "Failed to complete the primary owner transfer");
                 throw new RangerException(ex.Message);
             }
             catch (Exception)
             {
-                logger.LogError("Failed to complete the primary owner transfer.");
+                logger.LogError("Failed to complete the primary owner transfer");
                 throw;
             }
             busPublisher.Publish(new PrimaryOwnerTransferCompleted(), context);

@@ -23,7 +23,7 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(CreateTenant command, ICorrelationContext context)
         {
-            logger.LogInformation("Handling CreateTenant message.");
+            logger.LogInformation("Handling CreateTenant message");
             var random = new Random();
             var databasePassword = Crypto.GenerateSudoRandomPasswordString();
             var tenant = new Tenant()
@@ -42,11 +42,11 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain}'. Rejecting request.");
-                throw new RangerException("Failed to create tenant.");
+                logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain}'. Rejecting request");
+                throw new RangerException("Failed to create tenant");
             }
 
-            logger.LogInformation($"Tenant created for domain: '{command.Domain}'.");
+            logger.LogInformation($"Tenant created for domain: '{command.Domain}'");
 
             busPublisher.Publish<TenantCreated>(new TenantCreated(tenant.TenantId, command.Email, command.FirstName, command.LastName, command.Password, command.OrganizationName, databasePassword, tenant.Token), context);
         }

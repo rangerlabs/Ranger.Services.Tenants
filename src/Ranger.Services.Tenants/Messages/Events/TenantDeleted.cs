@@ -9,12 +9,12 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             if (string.IsNullOrWhiteSpace(organizationName))
             {
-                throw new System.ArgumentException($"{nameof(organizationName)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(organizationName)} was null or whitespace");
             }
 
             this.TenantId = tenantId;
