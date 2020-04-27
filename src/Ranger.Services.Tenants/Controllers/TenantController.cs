@@ -111,7 +111,7 @@ namespace Ranger.Services.Tenants
             }
             if (tenant.PrimaryOwnerTransfer is null || (!(tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending) || tenant.PrimaryOwnerTransfer.InitiatedAt.Add(TimeSpan.FromDays(1)) <= DateTime.UtcNow))
             {
-                throw new ApiException("There is no pending primary owner transfer", StatusCodes.Status404NotFound);
+                return new ApiResponse("There currently is no pending primary owner transfer", statusCode: StatusCodes.Status200OK);
             }
             var result = new { CorrelationId = tenant.PrimaryOwnerTransfer.CorrelationId, TransferTo = tenant.PrimaryOwnerTransfer.TransferingToEmail };
             return new ApiResponse($"Successfully retrieved primary owner transfer", result: result, statusCode: StatusCodes.Status200OK);
