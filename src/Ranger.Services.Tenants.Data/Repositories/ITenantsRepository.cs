@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ranger.Common;
 
@@ -16,5 +17,6 @@ namespace Ranger.Services.Tenants.Data
         Task SoftDelete(string userEmail, string domain);
         Task UpdateLastAccessed(string domain);
         Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant);
+        Task<IEnumerable<Tenant>> GetAllTenantsAsync();
     }
 }

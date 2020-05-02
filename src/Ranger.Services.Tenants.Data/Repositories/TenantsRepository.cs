@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.DataProtection;
@@ -202,6 +203,30 @@ namespace Ranger.Services.Tenants.Data
                 return tenant;
             }
             return null;
+        }
+
+        public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
+        {
+            var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated(
+                $@"WITH active_tenants AS (
+		            SELECT stream_id, MAX(version) AS version FROM tenant_streams WHERE data ->> 'Deleted' = 'false' AND data ->> 'Confirmed' = 'true' GROUP BY stream_id
+            	)
+                SELECT ts.*
+                FROM active_tenants at, tenant_streams ts
+                WHERE ts.stream_id = at.stream_id
+                AND ts.version = at.version").ToListAsync();
+            if ((tenantStreams.Any()))
+            {
+                var tenants = new List<Tenant>();
+                foreach (var tenantStream in tenantStreams)
+                {
+                    var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+                    tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+                    tenants.Add(tenant);
+                }
+                return tenants;
+            }
+            return default;
         }
 
         public Task UpdateLastAccessed(string domain)

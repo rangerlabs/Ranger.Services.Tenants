@@ -27,7 +27,7 @@ namespace Ranger.Services.Tenants
         }
 
         /// <summary>
-        /// Gets a Tenant for the given TenantId
+        /// Gets all Tenants or a specific Tenant for the given TenantId or Domain
         /// </summary>
         /// <param name="tenantId">The tenant's unique identitfier</param>
         /// <param name="domain">The tenant's domain identitfier</param>
@@ -39,8 +39,10 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(tenantId) && string.IsNullOrWhiteSpace(domain))
             {
-                throw new ApiException($"Must provide a tenantId or domain query string parameter", StatusCodes.Status400BadRequest);
+                var tenants = await this.tenantRepository.GetAllTenantsAsync();
+                return new ApiResponse($"Successfully retrieved all confirmed tenants", result: tenants, statusCode: StatusCodes.Status200OK);
             }
+
             Tenant tenant = null;
             if (string.IsNullOrWhiteSpace(tenantId))
             {
