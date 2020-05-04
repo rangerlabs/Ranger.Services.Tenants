@@ -74,7 +74,7 @@ namespace Ranger.Services.Tenants
             }
             catch (Exception ex)
             {
-                var message = "An error occurred determining tenant existence";
+                var message = "Failed to determine tenant existence";
                 logger.LogError(ex, message);
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
