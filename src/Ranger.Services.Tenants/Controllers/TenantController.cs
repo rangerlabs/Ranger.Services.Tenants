@@ -35,7 +35,7 @@ namespace Ranger.Services.Tenants
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ApiResponse> GetTenant([FromQuery]string tenantId, [FromQuery] string domain)
+        public async Task<ApiResponse> GetTenant([FromQuery] string tenantId, [FromQuery] string domain)
         {
             if (string.IsNullOrWhiteSpace(tenantId) && string.IsNullOrWhiteSpace(domain))
             {
@@ -92,7 +92,7 @@ namespace Ranger.Services.Tenants
             var (exists, confirmed) = await this.tenantRepository.IsTenantConfirmedAsync(domain);
             if (!exists)
             {
-                throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
+                throw new ApiException("No tenant was found for the requested domain", StatusCodes.Status404NotFound);
             }
             return new ApiResponse($"Successfully determined domain confirmation ", result: confirmed, statusCode: StatusCodes.Status200OK);
         }

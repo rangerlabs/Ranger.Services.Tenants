@@ -234,22 +234,22 @@ namespace Ranger.Services.Tenants.Data
             throw new System.NotImplementedException();
         }
 
-        public async Task CompletePrimaryOwnerTransferAsync(string userEmail, string domain, PrimaryOwnerTransferStateEnum state)
+        public async Task CompletePrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransferStateEnum state)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (state is PrimaryOwnerTransferStateEnum.Pending)
             {
                 throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status");
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
 
             tenant.PrimaryOwnerTransfer.State = state;
@@ -297,18 +297,18 @@ namespace Ranger.Services.Tenants.Data
 
         }
 
-        public async Task AddPrimaryOwnerTransferAsync(string userEmail, string domain, PrimaryOwnerTransfer transfer)
+        public async Task AddPrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransfer transfer)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
             var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
 
             if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
@@ -375,13 +375,13 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException($"{nameof(tenant)} was null");
             }
 
-            var currentTenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(tenant.Domain);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenant.TenantId);
             ValidateRequestVersionIncremented(version, currentTenantStream);
 
             var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
-            tenant.TenantId = outdatedTenant.TenantId; //Domain is used externally as the Id
-            tenant.CreatedOn = outdatedTenant.CreatedOn;
             tenant.TenantId = outdatedTenant.TenantId;
+            tenant.CreatedOn = outdatedTenant.CreatedOn;
+            tenant.Domain = outdatedTenant.Domain;
             tenant.DatabasePassword = outdatedTenant.DatabasePassword;
             tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
             tenant.Deleted = false;
@@ -461,7 +461,12 @@ namespace Ranger.Services.Tenants.Data
             {
                 return null;
             }
-            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId.ToString()} ORDER BY version DESC").FirstOrDefaultAsync();
+            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} ORDER BY version DESC").FirstOrDefaultAsync();
+        }
+
+        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
+        {
+            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         private void AddTenantUniqueConstraints(TenantStream tenantStream, Tenant tenant)
