@@ -1,10 +1,10 @@
-version: "3.5"
+version: '3.5'
 services:
     api:
         image: ranger.services.tenants:dev
         container_name: tenants
         ports:
-            - "8082:8082"
+            - '8082:8082'
         networks:
             - tenants
             - ranger
