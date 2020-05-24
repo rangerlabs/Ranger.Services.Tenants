@@ -23,20 +23,20 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(InitiatePrimaryOwnerTransfer message, ICorrelationContext context)
         {
-            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message.");
+            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
             var primaryOwnerTransfer = PrimaryOwnerTransfer.Create(message.CommandingUserEmail, message.TransferUserEmail, context.CorrelationContextId);
             try
             {
-                await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Domain, primaryOwnerTransfer);
+                await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.TenantId, primaryOwnerTransfer);
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogError(ex, "Failed to initiate the primary owner transfer.");
+                logger.LogError(ex, "Failed to initiate the primary owner transfer");
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to initiate the primary owner transfer.");
+                logger.LogError(ex, "Failed to initiate the primary owner transfer");
                 throw;
             }
             busPublisher.Publish(new PrimaryOwnerTransferInitiated(), context);

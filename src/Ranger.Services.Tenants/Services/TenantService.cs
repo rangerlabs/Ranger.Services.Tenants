@@ -17,12 +17,12 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new System.ArgumentException($"'{nameof(domain)}' was null or whitespace.");
+                throw new System.ArgumentException($"'{nameof(domain)}' was null or whitespace");
             }
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                throw new System.ArgumentException($"'{nameof(token)}' was null or whitespace.");
+                throw new System.ArgumentException($"'{nameof(token)}' was null or whitespace");
             }
 
             Tenant tenant = await tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
@@ -30,7 +30,7 @@ namespace Ranger.Services.Tenants
             {
                 return TenantConfirmStatusEnum.TenantNotFound;
             }
-            if (tenant.Enabled)
+            if (tenant.Confirmed)
             {
                 return TenantConfirmStatusEnum.PreviouslyConfirmed;
             }
@@ -38,7 +38,7 @@ namespace Ranger.Services.Tenants
             if (tenant.Token == token)
             {
                 tenant.Token = "";
-                tenant.Enabled = true;
+                tenant.Confirmed = true;
                 await tenantRepository.UpdateTenantAsync("Anonymous", "TenantConfirmed", 1, tenant);
                 return TenantConfirmStatusEnum.Confirmed;
             }

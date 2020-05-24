@@ -44,7 +44,7 @@ namespace Ranger.Services.Tenants.Data.Migrations
                 name: "tenant_unique_constraints",
                 columns: table => new
                 {
-                    tenant_id = table.Column<Guid>(nullable: false),
+                    tenant_id = table.Column<string>(maxLength: 36, nullable: false),
                     domain = table.Column<string>(maxLength: 28, nullable: false)
                 },
                 constraints: table =>

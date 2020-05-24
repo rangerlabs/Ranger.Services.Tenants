@@ -25,25 +25,25 @@ namespace Ranger.Services.Tenants.Handlers
         public async Task HandleAsync(DeleteTenant command, ICorrelationContext context)
         {
             Tenant tenant = null;
-            logger.LogInformation("Handling DeleteTenant message.");
+            logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.Domain);
+                tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"Failed to retrieve tenant.");
+                logger.LogWarning(ex, $"Failed to retrieve tenant");
                 throw;
             }
 
             if (tenant is null)
             {
-                throw new RangerException($"No tenant found for domain {command.Domain}.");
+                throw new RangerException($"No tenant found for domain {command.TenantId}");
             }
 
             try
             {
-                await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.Domain);
+                await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
             }
             catch (ConcurrencyException ex)
             {
@@ -52,11 +52,11 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to delete the tenant with domain '{command.Domain}'.");
-                throw new RangerException("Failed to delete the tenant. No additional data could be provided.");
+                logger.LogError(ex, $"Failed to delete the tenant with domain '{command.TenantId}'");
+                throw new RangerException("Failed to delete the tenant. No additional data could be provided");
             }
-            logger.LogInformation($"Tenant domain deleted: '{command.Domain}'.");
-            busPublisher.Publish(new TenantDeleted(command.Domain, tenant.OrganizationName), context);
+            logger.LogInformation($"Tenant domain deleted: '{command.TenantId}'");
+            busPublisher.Publish(new TenantDeleted(command.TenantId, tenant.OrganizationName), context);
         }
     }
 }

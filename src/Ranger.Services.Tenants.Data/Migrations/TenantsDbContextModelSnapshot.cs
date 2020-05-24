@@ -84,9 +84,10 @@ namespace Ranger.Services.Tenants.Data.Migrations
 
             modelBuilder.Entity("Ranger.Services.Tenants.Data.TenantUniqueConstraint", b =>
                 {
-                    b.Property<Guid>("TenantId")
+                    b.Property<string>("TenantId")
                         .HasColumnName("tenant_id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("character varying(36)")
+                        .HasMaxLength(36);
 
                     b.Property<string>("Domain")
                         .IsRequired()
