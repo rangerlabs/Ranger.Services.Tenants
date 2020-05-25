@@ -35,16 +35,16 @@ namespace Ranger.Services.Tenants
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers(options =>
-                {
-                    options.EnableEndpointRouting = false;
-                })
+            {
+                options.EnableEndpointRouting = false;
+            })
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            // services.AddAutoWrapper();
+            services.AddAutoWrapper();
             services.AddSwaggerGen("Tenants API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
@@ -108,13 +108,13 @@ namespace Ranger.Services.Tenants
 
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateTenant>((c, e) =>
-                    new CreateTenantRejected(e.Message, ""))
+                   new CreateTenantRejected(e.Message, ""))
                 .SubscribeCommand<DeleteTenant>((c, e) =>
-                    new DeleteTenantRejected(e.Message, ""))
+                   new DeleteTenantRejected(e.Message, ""))
                 .SubscribeCommand<InitiatePrimaryOwnerTransfer>((c, e) =>
-                    new InitiatePrimaryOwnerTransferRejected(e.Message, ""))
+                   new InitiatePrimaryOwnerTransferRejected(e.Message, ""))
                 .SubscribeCommand<CompletePrimaryOwnerTransfer>((c, e) =>
-                    new CompletePrimaryOwnerTransferRejected(e.Message, ""));
+                   new CompletePrimaryOwnerTransferRejected(e.Message, ""));
         }
 
         private void OnShutdown()
