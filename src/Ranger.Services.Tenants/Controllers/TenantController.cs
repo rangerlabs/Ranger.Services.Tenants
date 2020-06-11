@@ -64,6 +64,7 @@ namespace Ranger.Services.Tenants
                 OrganizationName = tenantVersionTuple.Item1.OrganizationName,
                 Domain = tenantVersionTuple.Item1.Domain,
                 DatabasePassword = tenantVersionTuple.Item1.DatabasePassword,
+                Confirmed = tenantVersionTuple.Item1.Confirmed,
                 PrimaryOwnerTransfer = tenantVersionTuple.Item1.PrimaryOwnerTransfer,
                 Version = tenantVersionTuple.Item2
             };
