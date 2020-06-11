@@ -43,20 +43,32 @@ namespace Ranger.Services.Tenants
                 return new ApiResponse($"Successfully retrieved all confirmed tenants", result: tenants, statusCode: StatusCodes.Status200OK);
             }
 
-            Tenant tenant = null;
+            var tenantVersionTuple = (default(Tenant), default(int));
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
+                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             }
             else
             {
-                tenant = await this.tenantRepository.FindTenantByTenantIdAsync(tenantId);
+                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByTenantIdAsync(tenantId);
             }
-            if (tenant is null)
+            if (tenantVersionTuple.Item1 is null)
             {
                 throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
             }
-            return new ApiResponse($"Successfully retrieved tenant", result: tenant, statusCode: StatusCodes.Status200OK);
+
+            var result = new
+            {
+                TenantId = tenantVersionTuple.Item1.TenantId,
+                CreatedOn = tenantVersionTuple.Item1.CreatedOn,
+                OrganizationName = tenantVersionTuple.Item1.OrganizationName,
+                Domain = tenantVersionTuple.Item1.Domain,
+                DatabasePassword = tenantVersionTuple.Item1.DatabasePassword,
+                PrimaryOwnerTransfer = tenantVersionTuple.Item1.PrimaryOwnerTransfer,
+                Version = tenantVersionTuple.Item2
+            };
+
+            return new ApiResponse($"Successfully retrieved tenant", result: result, statusCode: StatusCodes.Status200OK);
         }
 
         /// <summary>
@@ -106,7 +118,7 @@ namespace Ranger.Services.Tenants
         [HttpGet("/tenants/{domain}/primary-owner-transfer")]
         public async Task<ApiResponse> GetPrimaryOwnerTransfer(string domain)
         {
-            Tenant tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
+            var (tenant, _) = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);

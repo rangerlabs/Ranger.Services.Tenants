@@ -152,7 +152,7 @@ namespace Ranger.Services.Tenants.Data
             return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
         }
 
-        public async Task<Tenant> FindNotDeletedTenantByDomainAsync(string domain)
+        public async Task<(Tenant tenant, int version)> FindNotDeletedTenantByDomainAsync(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
@@ -164,9 +164,9 @@ namespace Ranger.Services.Tenants.Data
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
                 tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
-                return tenant;
+                return (tenant, tenantStream.Version);
             }
-            return null;
+            return (null, 0);
         }
 
         public async Task<(bool exists, bool confirmed)> IsTenantConfirmedAsync(string domain)
@@ -188,7 +188,7 @@ namespace Ranger.Services.Tenants.Data
             return (false, false);
         }
 
-        public async Task<Tenant> FindTenantByTenantIdAsync(string tenantId)
+        public async Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -200,9 +200,9 @@ namespace Ranger.Services.Tenants.Data
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
                 tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
-                return tenant;
+                return (tenant, tenantStream.Version);
             }
-            return null;
+            return (null, 0);
         }
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()

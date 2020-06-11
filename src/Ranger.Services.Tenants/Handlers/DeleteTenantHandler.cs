@@ -24,11 +24,11 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(DeleteTenant command, ICorrelationContext context)
         {
-            Tenant tenant = null;
+            var tenantVersionTuple = (default(Tenant), default(int));
             logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                tenant = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
+                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
             }
             catch (Exception ex)
             {
@@ -36,7 +36,7 @@ namespace Ranger.Services.Tenants.Handlers
                 throw;
             }
 
-            if (tenant is null)
+            if (tenantVersionTuple.Item1 is null)
             {
                 throw new RangerException($"No tenant found for domain {command.TenantId}");
             }
@@ -56,7 +56,7 @@ namespace Ranger.Services.Tenants.Handlers
                 throw new RangerException("Failed to delete the tenant. No additional data could be provided");
             }
             logger.LogInformation($"Tenant domain deleted: '{command.TenantId}'");
-            busPublisher.Publish(new TenantDeleted(command.TenantId, tenant.OrganizationName), context);
+            busPublisher.Publish(new TenantDeleted(command.TenantId, tenantVersionTuple.Item1.OrganizationName), context);
         }
     }
 }
