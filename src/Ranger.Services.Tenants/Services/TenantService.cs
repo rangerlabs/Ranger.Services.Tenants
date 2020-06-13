@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Ranger.Services.Tenants.Data;
 
@@ -43,6 +44,44 @@ namespace Ranger.Services.Tenants
                 return TenantConfirmStatusEnum.Confirmed;
             }
             return TenantConfirmStatusEnum.InvalidToken;
+        }
+
+        public async Task<(Tenant tenant, bool domainWasUpdated)> UpdateTenantOrganizationDetailsAsync(string tenantId, string commandingUserEmail, int version, string organizationName = "", string domain = "")
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException($"'{nameof(tenantId)}' cannot be null or whitespace", nameof(tenantId));
+            }
+
+            if (string.IsNullOrWhiteSpace(commandingUserEmail))
+            {
+                throw new ArgumentException($"'{nameof(commandingUserEmail)}' cannot be null or whitespace", nameof(commandingUserEmail));
+            }
+
+            if (string.IsNullOrWhiteSpace(organizationName) && string.IsNullOrWhiteSpace(domain))
+            {
+                throw new ArgumentException($"'{nameof(organizationName)}' or '{nameof(domain)}' must not null or whitespace", nameof(organizationName));
+            }
+
+            if (version <= 1)
+            {
+                throw new ArgumentException($"'{nameof(version)}' must be greater than 1", nameof(version));
+            }
+
+            var tenantVersion = await tenantRepository.FindNotDeletedTenantByTenantIdAsync(tenantId);
+            if (!String.IsNullOrWhiteSpace(organizationName))
+            {
+                tenantVersion.tenant.OrganizationName = organizationName;
+            }
+            var domainWasUpdated = false;
+            if (!String.IsNullOrWhiteSpace(domain))
+            {
+                tenantVersion.tenant.Domain = domain;
+                domainWasUpdated = true;
+            }
+
+            await tenantRepository.UpdateTenantAsync(commandingUserEmail, "TenantOrganizationUpdated", version, tenantVersion.tenant);
+            return (tenantVersion.tenant, domainWasUpdated);
         }
     }
 }

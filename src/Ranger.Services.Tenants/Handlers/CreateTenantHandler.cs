@@ -42,12 +42,11 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"Failed to create tenant for domain: '{command.Domain}'. Rejecting request");
-                throw new RangerException("Failed to create tenant");
+                logger.LogError(ex, "Failed to create tenant for domain {Domain}", command.Domain);
+                throw new RangerException($"An unexpected error occurred creating domain '{command.Domain}'");
             }
 
             logger.LogInformation($"Tenant created for domain: '{command.Domain}'");
-
             busPublisher.Publish<TenantCreated>(new TenantCreated(tenant.TenantId, command.Email, command.FirstName, command.LastName, command.Password, command.OrganizationName, databasePassword, tenant.Token), context);
         }
     }

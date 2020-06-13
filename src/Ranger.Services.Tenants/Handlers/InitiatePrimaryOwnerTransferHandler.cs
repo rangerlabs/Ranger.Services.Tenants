@@ -31,13 +31,13 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogError(ex, "Failed to initiate the primary owner transfer");
+                logger.LogDebug(ex, "Failed to intiate the domain transfer");
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to initiate the primary owner transfer");
-                throw;
+                logger.LogError(ex, "An unexpected error occurred intiating the domain transfer");
+                throw new RangerException("An unexpected error occurred intiating the domain transfer");
             }
             busPublisher.Publish(new PrimaryOwnerTransferInitiated(), context);
         }

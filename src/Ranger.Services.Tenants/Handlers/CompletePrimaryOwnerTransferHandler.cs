@@ -30,13 +30,13 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogError(ex, "Failed to complete the primary owner transfer");
+                logger.LogDebug(ex, "Failed to complete the primary owner transfer");
                 throw new RangerException(ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                logger.LogError("Failed to complete the primary owner transfer");
-                throw;
+                logger.LogError(ex, "An unexpected error occurred completing the primary owner transfer");
+                throw new RangerException("An unexpected error occurred completing the primary owner transfer");
             }
             busPublisher.Publish(new PrimaryOwnerTransferCompleted(), context);
         }
