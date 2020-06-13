@@ -378,6 +378,14 @@ namespace Ranger.Services.Tenants.Data
             var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenant.TenantId);
             ValidateRequestVersionIncremented(version, currentTenantStream);
 
+            //These fields cannot be edited through this Update method
+            var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
+            tenant.TenantId = outdatedTenant.TenantId;
+            tenant.CreatedOn = outdatedTenant.CreatedOn;
+            tenant.DatabasePassword = outdatedTenant.DatabasePassword;
+            tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
+            tenant.Deleted = false;
+
             var serializedNewTenantData = JsonConvert.SerializeObject(tenant);
             var uniqueConstraint = await this.GetTenantUniqueConstraintAsync(tenant.TenantId);
             uniqueConstraint.Domain = tenant.Domain;
