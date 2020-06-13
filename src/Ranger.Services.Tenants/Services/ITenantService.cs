@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants
 {
