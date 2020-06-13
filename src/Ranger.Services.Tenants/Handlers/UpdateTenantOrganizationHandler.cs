@@ -35,13 +35,11 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogDebug(ex, "Failed to update organization details");
-                throw new RangerException(ex.Message);
+                throw new RangerException(ex.Message, ex);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An unexpected error occurred updating the organization details");
-                throw new RangerException("An unexpected error occurred updating the organization details");
+                throw new RangerException("An unexpected error occurred updating the organization details", ex);
             }
         }
     }
