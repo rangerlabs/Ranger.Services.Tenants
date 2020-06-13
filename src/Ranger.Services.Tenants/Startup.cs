@@ -15,6 +15,7 @@ using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
+using Ranger.Services.Operations.Messages.Tenants.RejectedEvents;
 using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants
@@ -116,7 +117,9 @@ namespace Ranger.Services.Tenants
                 .SubscribeCommand<InitiatePrimaryOwnerTransfer>((c, e) =>
                    new InitiatePrimaryOwnerTransferRejected(e.Message, ""))
                 .SubscribeCommand<CompletePrimaryOwnerTransfer>((c, e) =>
-                   new CompletePrimaryOwnerTransferRejected(e.Message, ""));
+                   new CompletePrimaryOwnerTransferRejected(e.Message, ""))
+                .SubscribeCommand<UpdateTenantOrganization>((c, e) =>
+                   new UpdateTenantOrganizationRejected(e.Message, ""));
         }
 
         private void OnShutdown()
