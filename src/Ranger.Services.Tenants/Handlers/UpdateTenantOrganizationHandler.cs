@@ -9,11 +9,11 @@ namespace Ranger.Services.Tenants.Handlers
 {
     public class UpdateTenantOrganizationHandler : ICommandHandler<UpdateTenantOrganization>
     {
-        private readonly BusPublisher busPublisher;
+        private readonly IBusPublisher busPublisher;
         private readonly TenantsService tenantsService;
         private readonly ILogger<UpdateTenantOrganizationHandler> logger;
 
-        public UpdateTenantOrganizationHandler(BusPublisher busPublisher, TenantsService tenantsService, ILogger<UpdateTenantOrganizationHandler> logger)
+        public UpdateTenantOrganizationHandler(IBusPublisher busPublisher, TenantsService tenantsService, ILogger<UpdateTenantOrganizationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.tenantsService = tenantsService;
