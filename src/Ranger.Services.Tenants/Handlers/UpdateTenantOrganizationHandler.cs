@@ -26,7 +26,7 @@ namespace Ranger.Services.Tenants.Handlers
             try
             {
                 var updatedTenantResult = await tenantsService.UpdateTenantOrganizationDetailsAsync(message.TenantId, message.CommandingUserEmail, message.Version, message.OrganizationName, message.Domain);
-                busPublisher.Publish(new TenantOrganizationUpdated(updatedTenantResult.tenant.OrganizationName, updatedTenantResult.tenant.Domain, updatedTenantResult.domainWasUpdated), context);
+                busPublisher.Publish(new TenantOrganizationUpdated(updatedTenantResult.tenant.OrganizationName, updatedTenantResult.tenant.Domain, updatedTenantResult.domainWasUpdated, updatedTenantResult.oldDomain), context);
             }
             catch (EventStreamDataConstraintException ex)
             {

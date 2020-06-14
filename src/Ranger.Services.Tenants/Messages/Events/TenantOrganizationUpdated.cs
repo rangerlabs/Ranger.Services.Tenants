@@ -5,7 +5,7 @@ namespace Ranger.Services.Tenants
     [MessageNamespace("tenants")]
     public class TenantOrganizationUpdated : IEvent
     {
-        public TenantOrganizationUpdated(string organizationName, string domain, bool domainWasUpdated)
+        public TenantOrganizationUpdated(string organizationName, string domain, bool domainWasUpdated, string oldDomain = "")
         {
             if (string.IsNullOrWhiteSpace(organizationName))
             {
@@ -20,10 +20,12 @@ namespace Ranger.Services.Tenants
             this.OrganizationName = organizationName;
             this.Domain = domain;
             this.DomainWasUpdated = domainWasUpdated;
+            this.OldDomain = oldDomain;
         }
         public string OrganizationName { get; }
         public string Domain { get; }
         public bool DomainWasUpdated { get; }
+        public string OldDomain { get; }
 
     }
 }

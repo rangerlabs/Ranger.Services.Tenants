@@ -46,7 +46,7 @@ namespace Ranger.Services.Tenants
             return TenantConfirmStatusEnum.InvalidToken;
         }
 
-        public async Task<(Tenant tenant, bool domainWasUpdated)> UpdateTenantOrganizationDetailsAsync(string tenantId, string commandingUserEmail, int version, string organizationName = "", string domain = "")
+        public async Task<(Tenant tenant, bool domainWasUpdated, string oldDomain)> UpdateTenantOrganizationDetailsAsync(string tenantId, string commandingUserEmail, int version, string organizationName = "", string domain = "")
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -74,14 +74,16 @@ namespace Ranger.Services.Tenants
                 tenantVersion.tenant.OrganizationName = organizationName;
             }
             var domainWasUpdated = false;
+            var oldDomain = "";
             if (!String.IsNullOrWhiteSpace(domain))
             {
                 tenantVersion.tenant.Domain = domain;
+                oldDomain = tenantVersion.tenant.Domain;
                 domainWasUpdated = true;
             }
 
             await tenantRepository.UpdateTenantAsync(commandingUserEmail, "TenantOrganizationUpdated", version, tenantVersion.tenant);
-            return (tenantVersion.tenant, domainWasUpdated);
+            return (tenantVersion.tenant, domainWasUpdated, oldDomain);
         }
     }
 }
