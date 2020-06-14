@@ -78,7 +78,7 @@ namespace Ranger.Services.Tenants
             if (!String.IsNullOrWhiteSpace(domain))
             {
                 tenantVersion.tenant.Domain = domain;
-                oldDomain = tenantVersion.tenant.Domain;
+                oldDomain = $"{tenantVersion.tenant.Domain}";
                 domainWasUpdated = true;
             }
 
