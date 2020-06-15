@@ -25,15 +25,16 @@ namespace Ranger.Services.Tenants.Handlers
         public async Task HandleAsync(DeleteTenant command, ICorrelationContext context)
         {
             logger.LogInformation("Handling DeleteTenant message");
-            var tenantVersionTuple = (default(Tenant), default(int));
             try
             {
-                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
-                if (tenantVersionTuple.Item1 is null)
+                var tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
+                if (tenantVersionTuple.tenant is null)
                 {
                     throw new RangerException($"No tenant found for domain {command.TenantId}");
                 }
                 await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
+                logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
+                busPublisher.Publish(new TenantDeleted(command.TenantId, tenantVersionTuple.tenant.OrganizationName), context);
             }
             catch (ConcurrencyException ex)
             {
@@ -42,11 +43,9 @@ namespace Ranger.Services.Tenants.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An unexpected error occurred deleting domain {Domain}", tenantVersionTuple.Item1.Domain);
-                throw new RangerException($"An unexpected error occurred deleting domain '{tenantVersionTuple.Item1.Domain}'");
+                logger.LogError(ex, "An unexpected error occurred deleting tenant {TenantId}", command.TenantId);
+                throw new RangerException($"An unexpected error occurred deleting tenant with TenantId '{command.TenantId}'");
             }
-            logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
-            busPublisher.Publish(new TenantDeleted(command.TenantId, tenantVersionTuple.Item1.OrganizationName), context);
         }
     }
 }
