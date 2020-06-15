@@ -27,7 +27,7 @@ namespace Ranger.Services.Tenants.Handlers
             logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                var tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(command.TenantId);
+                var tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByTenantIdAsync(command.TenantId);
                 if (tenantVersionTuple.tenant is null)
                 {
                     throw new RangerException($"No tenant found for domain {command.TenantId}");
