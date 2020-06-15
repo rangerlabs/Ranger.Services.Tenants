@@ -14,7 +14,7 @@ namespace Ranger.Services.Tenants.Data
         Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId);
         Task<(Tenant tenant, int version)> FindNotDeletedTenantByDomainAsync(string domain);
         Task<(bool exists, bool confirmed)> IsTenantConfirmedAsync(string domain);
-        Task SoftDelete(string userEmail, string domain);
+        Task<string> SoftDelete(string userEmail, string tenantId);
         Task UpdateLastAccessed(string domain);
         Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant);
         Task<IEnumerable<Tenant>> GetAllTenantsAsync();

@@ -75,20 +75,20 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        public async Task SoftDelete(string userEmail, string domain)
+        public async Task<string> SoftDelete(string userEmail, string tenantId)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
 
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
-            domain = domain.ToLowerInvariant();
+            tenantId = tenantId.ToLowerInvariant();
 
-            var currentTenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
             if (!(currentTenantStream is null))
             {
                 var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
@@ -115,6 +115,7 @@ namespace Ranger.Services.Tenants.Data
                         await this.context.SaveChangesAsync();
                         deleted = true;
                         logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted");
+                        return currentTenant.OrganizationName;
                     }
                     catch (DbUpdateException ex)
                     {
@@ -142,7 +143,7 @@ namespace Ranger.Services.Tenants.Data
             }
             else
             {
-                throw new ArgumentException($"No tenant was found with domain '{domain}'");
+                throw new ArgumentException($"No tenant was found with domain '{tenantId}'");
             }
         }
 

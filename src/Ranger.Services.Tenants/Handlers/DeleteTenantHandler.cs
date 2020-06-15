@@ -27,14 +27,9 @@ namespace Ranger.Services.Tenants.Handlers
             logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                var tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByTenantIdAsync(command.TenantId);
-                if (tenantVersionTuple.tenant is null)
-                {
-                    throw new RangerException($"No tenant found for domain {command.TenantId}");
-                }
-                await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
+                var orgNameOfDeleted await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
                 logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
-                busPublisher.Publish(new TenantDeleted(command.TenantId, tenantVersionTuple.tenant.OrganizationName), context);
+                busPublisher.Publish(new TenantDeleted(command.TenantId, orgNameOfDeleted), context);
             }
             catch (ConcurrencyException ex)
             {
