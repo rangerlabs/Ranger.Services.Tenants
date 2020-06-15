@@ -86,10 +86,13 @@ namespace Ranger.Services.Tenants.Data
             {
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
-            tenantId = tenantId.ToLowerInvariant();
 
             var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
-            if (!(currentTenantStream is null))
+            if (currentTenantStream is null)
+            {
+                throw new ArgumentException($"No tenant was found with domain '{tenantId}'");
+            }
+            else
             {
                 var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
                 currentTenant.Deleted = true;
@@ -115,7 +118,6 @@ namespace Ranger.Services.Tenants.Data
                         await this.context.SaveChangesAsync();
                         deleted = true;
                         logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted");
-                        return currentTenant.OrganizationName;
                     }
                     catch (DbUpdateException ex)
                     {
@@ -140,11 +142,10 @@ namespace Ranger.Services.Tenants.Data
                 {
                     throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted");
                 }
+                return currentTenant.OrganizationName;
             }
-            else
-            {
-                throw new ArgumentException($"No tenant was found with domain '{tenantId}'");
-            }
+
+
         }
 
 

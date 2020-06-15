@@ -11,11 +11,11 @@ namespace Ranger.Services.Tenants.Handlers
 {
     class DeleteTenantHandler : ICommandHandler<DeleteTenant>
     {
-        private readonly ILogger<CreateTenantHandler> logger;
+        private readonly ILogger<DeleteTenantHandler> logger;
         private readonly ITenantsRepository tenantRepository;
         private readonly IBusPublisher busPublisher;
 
-        public DeleteTenantHandler(ILogger<CreateTenantHandler> logger, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
+        public DeleteTenantHandler(ILogger<DeleteTenantHandler> logger, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
         {
             this.logger = logger;
             this.tenantRepository = tenantRepository;
