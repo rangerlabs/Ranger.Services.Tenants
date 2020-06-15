@@ -420,7 +420,7 @@ namespace Ranger.Services.Tenants.Data
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentTenantStream.Version}' and the request update version was '{version}'");
+                                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
                             }
                         default:
                             {
@@ -442,15 +442,15 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        private static void ValidateRequestVersionIncremented(int version, TenantStream currentProjectStream)
+        private static void ValidateRequestVersionIncremented(int version, TenantStream currentTenantStream)
         {
-            if (version - currentProjectStream.Version > 1)
+            if (version - currentTenantStream.Version > 1)
             {
-                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'");
+                throw new ConcurrencyException($"The version number '{version}' was too high. The current resource is at version '{currentTenantStream.Version}'");
             }
-            if (version - currentProjectStream.Version <= 0)
+            if (version - currentTenantStream.Version <= 0)
             {
-                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentProjectStream.Version}' and the request update version was '{version}'");
+                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
             }
         }
 
