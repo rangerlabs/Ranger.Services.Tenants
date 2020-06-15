@@ -27,7 +27,7 @@ namespace Ranger.Services.Tenants.Handlers
             logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                var orgNameOfDeleted await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
+                var orgNameOfDeleted = await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
                 logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
                 busPublisher.Publish(new TenantDeleted(command.TenantId, orgNameOfDeleted), context);
             }
