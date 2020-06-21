@@ -144,10 +144,7 @@ namespace Ranger.Services.Tenants.Data
                 }
                 return currentTenant.OrganizationName;
             }
-
-
         }
-
 
         public async Task<bool> ExistsAsync(string domain)
         {
@@ -168,10 +165,9 @@ namespace Ranger.Services.Tenants.Data
 					FROM tenant_streams t, tenant_unique_constraints tuc
 					WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
                )
-               SELECT DISTINCT ON (t.stream_id) 
-              		*
+               SELECT DISTINCT ON (t.stream_id) *
                 FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC;").FirstOrDefaultAsync();
+                ORDER BY t.stream_id, t.version DESC").FirstOrDefaultAsync();
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -197,7 +193,7 @@ namespace Ranger.Services.Tenants.Data
                 )
                 SELECT *
             	FROM not_deleted t
-            	WHERE event = 'TenantConfirmed';").FirstOrDefaultAsync();
+            	WHERE event = 'TenantConfirmed'").FirstOrDefaultAsync();
             return tenantStream is null ? false : true;
         }
 
@@ -230,7 +226,7 @@ namespace Ranger.Services.Tenants.Data
                SELECT DISTINCT ON (t.stream_id) 
               		*
                 FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC;").FirstOrDefaultAsync();
+                ORDER BY t.stream_id, t.version DESC").FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
