@@ -162,7 +162,7 @@ namespace Ranger.Services.Tenants.Data
             }
 
             var tenantStream = await this.context.TenantStreams
-            .FromSqlRaw($@"
+            .FromSqlInterpolated($@"
                 WITH not_deleted AS(
 					SELECT *
 					FROM tenant_streams t, tenant_unique_constraints tuc
@@ -189,7 +189,7 @@ namespace Ranger.Services.Tenants.Data
             }
 
             var tenantStream = await this.context.TenantStreams
-            .FromSqlRaw($@"
+            .FromSqlInterpolated($@"
                 WITH not_deleted AS(
                     SELECT *
                 	FROM tenant_streams t, tenant_unique_constraints tuc
@@ -221,7 +221,7 @@ namespace Ranger.Services.Tenants.Data
         private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
         {
             return await this.context.TenantStreams
-            .FromSqlRaw($@"
+            .FromSqlInterpolated($@"
                 WITH not_deleted AS(
 					SELECT *
 					FROM tenant_streams t, tenant_unique_constraints tuc
