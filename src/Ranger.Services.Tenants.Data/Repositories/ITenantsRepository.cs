@@ -13,7 +13,7 @@ namespace Ranger.Services.Tenants.Data
         Task<bool> ExistsAsync(string domain);
         Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId);
         Task<(Tenant tenant, int version)> FindNotDeletedTenantByDomainAsync(string domain);
-        Task<(bool exists, bool confirmed)> IsTenantConfirmedAsync(string domain);
+        Task<bool> IsTenantConfirmedAsync(string domain);
         Task<string> SoftDelete(string userEmail, string tenantId);
         Task UpdateLastAccessed(string domain);
         Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant);

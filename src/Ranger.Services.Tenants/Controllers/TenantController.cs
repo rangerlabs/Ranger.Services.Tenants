@@ -102,11 +102,12 @@ namespace Ranger.Services.Tenants
         [HttpGet("/tenants/{domain}/confirmed")]
         public async Task<ApiResponse> GetConfirmed(string domain)
         {
-            var (exists, confirmed) = await this.tenantRepository.IsTenantConfirmedAsync(domain);
+            var exists = await this.tenantRepository.ExistsAsync(domain);
             if (!exists)
             {
                 throw new ApiException("No tenant was found for the requested domain", StatusCodes.Status404NotFound);
             }
+            var confirmed = await this.tenantRepository.IsTenantConfirmedAsync(domain);
             return new ApiResponse($"Successfully determined domain confirmation ", result: confirmed, statusCode: StatusCodes.Status200OK);
         }
 

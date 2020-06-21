@@ -161,7 +161,17 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException("message", nameof(domain));
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
+            var tenantStream = await this.context.TenantStreams
+            .FromSqlRaw($@"
+                WITH not_deleted AS(
+					SELECT *
+					FROM tenant_streams t, tenant_unique_constraints tuc
+					WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
+               )
+               SELECT DISTINCT ON (t.stream_id) 
+              		*
+                FROM not_deleted t
+                ORDER BY t.stream_id, t.version DESC;").FirstOrDefaultAsync();
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -171,23 +181,24 @@ namespace Ranger.Services.Tenants.Data
             return (null, 0);
         }
 
-        public async Task<(bool exists, bool confirmed)> IsTenantConfirmedAsync(string domain)
+        public async Task<bool> IsTenantConfirmedAsync(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
                 throw new ArgumentException("message", nameof(domain));
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByDomainAsync(domain);
-            if (!(tenantStream is null))
-            {
-                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-                if (!tenant.Deleted)
-                {
-                    return (true, tenant.Confirmed);
-                }
-            }
-            return (false, false);
+            var tenantStream = await this.context.TenantStreams
+            .FromSqlRaw($@"
+                WITH not_deleted AS(
+                    SELECT *
+                	FROM tenant_streams t, tenant_unique_constraints tuc
+                	WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
+                )
+                SELECT *
+            	FROM not_deleted t
+            	WHERE event = 'TenantConfirmed';").FirstOrDefaultAsync();
+            return tenantStream is null ? false : true;
         }
 
         public async Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId)
@@ -197,7 +208,7 @@ namespace Ranger.Services.Tenants.Data
                 throw new ArgumentException("message", nameof(tenantId));
             }
 
-            var tenantStream = await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var tenantStream = await GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -205,6 +216,21 @@ namespace Ranger.Services.Tenants.Data
                 return (tenant, tenantStream.Version);
             }
             return (null, 0);
+        }
+
+        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
+        {
+            return await this.context.TenantStreams
+            .FromSqlRaw($@"
+                WITH not_deleted AS(
+					SELECT *
+					FROM tenant_streams t, tenant_unique_constraints tuc
+					WHERE tuc.tenant_id = {tenantId} AND (t.data ->> 'TenantId') = tuc.tenant_id::text
+               )
+               SELECT DISTINCT ON (t.stream_id) 
+              		*
+                FROM not_deleted t
+                ORDER BY t.stream_id, t.version DESC;").FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
@@ -454,21 +480,6 @@ namespace Ranger.Services.Tenants.Data
             {
                 throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
             }
-        }
-
-        private async Task<TenantStream> GetNotDeletedTenantStreamByDomainAsync(string domain)
-        {
-            var tenantId = (await this.context.TenantUniqueConstraints.Where(_ => _.Domain == domain.ToLowerInvariant()).SingleOrDefaultAsync())?.TenantId;
-            if (tenantId is null)
-            {
-                return null;
-            }
-            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} ORDER BY version DESC").FirstOrDefaultAsync();
-        }
-
-        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
-        {
-            return await this.context.TenantStreams.FromSqlInterpolated($"SELECT * FROM tenant_streams WHERE data ->> 'TenantId' = {tenantId} ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         private void AddTenantUniqueConstraints(TenantStream tenantStream, Tenant tenant)
