@@ -220,14 +220,15 @@ namespace Ranger.Services.Tenants.Data
         {
             return await this.context.TenantStreams
             .FromSqlInterpolated($@"
-                WITH not_deleted AS(
-					SELECT *
-					FROM tenant_streams t, tenant_unique_constraints tuc
-					WHERE tuc.tenant_id = {tenantId} AND (t.data ->> 'TenantId') = tuc.tenant_id::text
-               )
-               SELECT DISTINCT ON (t.stream_id) *
-                FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC").FirstOrDefaultAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                        FROM tenant_streams t, tenant_unique_constraints tuc
+                        WHERE tuc.tenant_id = {tenantId} AND (t.data ->> 'TenantId') = tuc.tenant_id::text
+                )
+                SELECT DISTINCT ON (t.stream_id) *
+                    FROM not_deleted t
+                    ORDER BY t.stream_id, t.version DESC) as tenantstream").FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
