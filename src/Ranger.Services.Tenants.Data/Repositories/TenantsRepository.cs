@@ -252,7 +252,7 @@ namespace Ranger.Services.Tenants.Data
                 }
                 return tenants;
             }
-            return default;
+            return new List<Tenant>();
         }
 
         public Task UpdateLastAccessed(string domain)
