@@ -160,30 +160,15 @@ namespace Ranger.Services.Tenants.Data
 
             var tenantStream = await this.context.TenantStreams
             .FromSqlInterpolated($@"
-                WITH not_deleted AS(
-					SELECT i.id,
-            	    	i.tenant_id,
-            	    	i.stream_id,
-            	    	i.version,
-            	    	i.data,
-                        i.integration_type,
-            	    	i.event,
-            	    	i.inserted_at,
-            	    	i.inserted_by
-					FROM tenant_streams t, tenant_unique_constraints tuc
-					WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
-               )
-               SELECT DISTINCT ON (t.stream_id) i.id,
-            	    	i.tenant_id,
-            	    	i.stream_id,
-            	    	i.version,
-            	    	i.data,
-                        i.integration_type,
-            	    	i.event,
-            	    	i.inserted_at,
-            	    	i.inserted_by
-                FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC").FirstOrDefaultAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+					    SELECT *
+					    FROM tenant_streams t, tenant_unique_constraints tuc
+					    WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
+                    )
+                   SELECT DISTINCT ON (t.stream_id) *
+                    FROM not_deleted t
+                    ORDER BY t.stream_id, t.version DESC) AS tenantstreams").FirstOrDefaultAsync();
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -202,30 +187,15 @@ namespace Ranger.Services.Tenants.Data
 
             var tenantStream = await this.context.TenantStreams
             .FromSqlInterpolated($@"
-                WITH not_deleted AS(
-                    SELECT  i.id,
-            	    i.tenant_id,
-            	    i.stream_id,
-            	    i.version,
-            	    i.data,
-                    i.integration_type,
-            	    i.event,
-            	    i.inserted_at,
-            	    i.inserted_by
-                FROM tenant_streams t, tenant_unique_constraints tuc
-                WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
-                )
-                SELECT i.id,
-            	    i.tenant_id,
-            	    i.stream_id,
-            	    i.version,
-            	    i.data,
-                    i.integration_type,
-            	    i.event,
-            	    i.inserted_at,
-            	    i.inserted_by
-            	FROM not_deleted t
-            	WHERE event = 'TenantConfirmed'").FirstOrDefaultAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                    	FROM tenant_streams t, tenant_unique_constraints tuc
+                    	WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
+                    )
+                    SELECT *
+            	    FROM not_deleted t
+            	    WHERE event = 'TenantConfirmed') AS tenantstreams").FirstOrDefaultAsync();
             return tenantStream is null ? false : true;
         }
 
@@ -251,41 +221,25 @@ namespace Ranger.Services.Tenants.Data
             return await this.context.TenantStreams
             .FromSqlInterpolated($@"
                 WITH not_deleted AS(
-					SELECT i.id,
-            	    	i.tenant_id,
-            	    	i.stream_id,
-            	    	i.version,
-            	    	i.data,
-                        i.integration_type,
-            	    	i.event,
-            	    	i.inserted_at,
-            	    	i.inserted_by
+					SELECT *
 					FROM tenant_streams t, tenant_unique_constraints tuc
 					WHERE tuc.tenant_id = {tenantId} AND (t.data ->> 'TenantId') = tuc.tenant_id::text
                )
-               SELECT DISTINCT ON (t.stream_id) i.id,
-            	    	i.tenant_id,
-            	    	i.stream_id,
-            	    	i.version,
-            	    	i.data,
-                        i.integration_type,
-            	    	i.event,
-            	    	i.inserted_at,
-            	    	i.inserted_by
+               SELECT DISTINCT ON (t.stream_id) *
                 FROM not_deleted t
                 ORDER BY t.stream_id, t.version DESC").FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Tenant>> GetAllTenantsAsync()
         {
-            var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated(
-                $@"WITH active_tenants AS (
-		            SELECT stream_id, MAX(version) AS version FROM tenant_streams WHERE data ->> 'Deleted' = 'false' AND data ->> 'Confirmed' = 'true' GROUP BY stream_id
-            	)
-                SELECT ts.*
-                FROM active_tenants at, tenant_streams ts
-                WHERE ts.stream_id = at.stream_id
-                AND ts.version = at.version").ToListAsync();
+            var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated($@"
+                SELECT * FROM (WITH active_tenants AS (
+		                SELECT stream_id, MAX(version) AS version FROM tenant_streams WHERE data ->> 'Deleted' = 'false' AND data ->> 'Confirmed' = 'true' GROUP BY stream_id
+                	)
+                    SELECT ts.*
+                    FROM active_tenants at, tenant_streams ts
+                    WHERE ts.stream_id = at.stream_id
+                    AND ts.version = at.version) AS tenantstreams").ToListAsync();
             if ((tenantStreams.Any()))
             {
                 var tenants = new List<Tenant>();
