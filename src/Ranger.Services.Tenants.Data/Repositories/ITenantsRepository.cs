@@ -11,7 +11,7 @@ namespace Ranger.Services.Tenants.Data
         Task AddPrimaryOwnerTransferAsync(string userEmail, string domain, PrimaryOwnerTransfer transfer);
         Task AddTenant(string userEmail, Tenant tenant);
         Task<bool> ExistsAsync(string domain);
-        Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId);
+        Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId);
         Task<(Tenant tenant, int version)> FindNotDeletedTenantByDomainAsync(string domain);
         Task<bool> IsTenantConfirmedAsync(string domain);
         Task<string> SoftDelete(string userEmail, string tenantId);

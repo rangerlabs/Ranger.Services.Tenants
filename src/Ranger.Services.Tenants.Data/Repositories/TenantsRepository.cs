@@ -199,7 +199,7 @@ namespace Ranger.Services.Tenants.Data
             return tenantStream is null ? false : true;
         }
 
-        public async Task<(Tenant tenant, int version)> FindNotDeletedTenantByTenantIdAsync(string tenantId)
+        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -492,7 +492,6 @@ namespace Ranger.Services.Tenants.Data
 
         private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(string tenantId)
         {
-
             return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId);
         }
     }

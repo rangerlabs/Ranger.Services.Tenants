@@ -68,7 +68,7 @@ namespace Ranger.Services.Tenants
                 throw new ArgumentException($"'{nameof(version)}' must be greater than 1", nameof(version));
             }
 
-            var tenantVersion = await tenantRepository.FindNotDeletedTenantByTenantIdAsync(tenantId);
+            var tenantVersion = await tenantRepository.GetNotDeletedTenantByTenantIdAsync(tenantId);
             if (!String.IsNullOrWhiteSpace(organizationName))
             {
                 tenantVersion.tenant.OrganizationName = organizationName;

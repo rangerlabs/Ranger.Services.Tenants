@@ -50,7 +50,7 @@ namespace Ranger.Services.Tenants
             }
             else
             {
-                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByTenantIdAsync(tenantId);
+                tenantVersionTuple = await this.tenantRepository.GetNotDeletedTenantByTenantIdAsync(tenantId);
             }
             if (tenantVersionTuple.Item1 is null)
             {
