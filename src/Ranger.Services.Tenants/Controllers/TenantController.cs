@@ -39,14 +39,14 @@ namespace Ranger.Services.Tenants
         {
             if (string.IsNullOrWhiteSpace(tenantId) && string.IsNullOrWhiteSpace(domain))
             {
-                var tenants = await this.tenantRepository.GetAllTenantsAsync();
+                var tenants = await this.tenantRepository.GetAllNotDeletedAndConfirmedTenantsAsync();
                 return new ApiResponse($"Successfully retrieved all confirmed tenants", result: tenants, statusCode: StatusCodes.Status200OK);
             }
 
             var tenantVersionTuple = (default(Tenant), default(int));
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                tenantVersionTuple = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
+                tenantVersionTuple = await this.tenantRepository.GetNotDeletedTenantByDomainAsync(domain);
             }
             else
             {
@@ -120,7 +120,7 @@ namespace Ranger.Services.Tenants
         [HttpGet("/tenants/{domain}/primary-owner-transfer")]
         public async Task<ApiResponse> GetPrimaryOwnerTransfer(string domain)
         {
-            var (tenant, _) = await this.tenantRepository.FindNotDeletedTenantByDomainAsync(domain);
+            var (tenant, _) = await this.tenantRepository.GetNotDeletedTenantByDomainAsync(domain);
             if (tenant is null)
             {
                 throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);

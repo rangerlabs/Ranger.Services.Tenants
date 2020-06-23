@@ -12,11 +12,11 @@ namespace Ranger.Services.Tenants.Data
         Task AddTenant(string userEmail, Tenant tenant);
         Task<bool> ExistsAsync(string domain);
         Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId);
-        Task<(Tenant tenant, int version)> FindNotDeletedTenantByDomainAsync(string domain);
+        Task<(Tenant tenant, int version)> GetNotDeletedTenantByDomainAsync(string domain);
         Task<bool> IsTenantConfirmedAsync(string domain);
         Task<string> SoftDelete(string userEmail, string tenantId);
         Task UpdateLastAccessed(string domain);
         Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant);
-        Task<IEnumerable<Tenant>> GetAllTenantsAsync();
+        Task<IEnumerable<Tenant>> GetAllNotDeletedAndConfirmedTenantsAsync();
     }
 }
