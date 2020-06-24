@@ -11,63 +11,51 @@ using Npgsql;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
 
-namespace Ranger.Services.Tenants.Data
-{
-    public class TenantsRepository : ITenantsRepository
-    {
+namespace Ranger.Services.Tenants.Data {
+    public class TenantsRepository : ITenantsRepository {
         private readonly IDataProtector dataProtector;
         private readonly ILogger<TenantsRepository> logger;
         private readonly TenantsDbContext context;
-        public TenantsRepository(TenantsDbContext context, ILogger<TenantsRepository> logger, IDataProtectionProvider dataProtectionProvider)
-        {
+        public TenantsRepository (TenantsDbContext context, ILogger<TenantsRepository> logger, IDataProtectionProvider dataProtectionProvider) {
             this.context = context;
             this.logger = logger;
-            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(TenantsRepository));
+            this.dataProtector = dataProtectionProvider.CreateProtector (nameof (TenantsRepository));
         }
 
-        public async Task AddTenant(string userEmail, Tenant tenant)
-        {
-            if (string.IsNullOrWhiteSpace(userEmail))
-            {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
+        public async Task AddTenant (string userEmail, Tenant tenant) {
+            if (string.IsNullOrWhiteSpace (userEmail)) {
+                throw new ArgumentException ($"{nameof(userEmail)} was null or whitespace");
             }
-            if (tenant is null)
-            {
-                throw new ArgumentNullException($"{nameof(tenant)} was null");
+            if (tenant is null) {
+                throw new ArgumentNullException ($"{nameof(tenant)} was null");
             }
 
-            tenant.Domain = tenant.Domain.ToLowerInvariant();
-            tenant.DatabasePassword = this.dataProtector.Protect(tenant.DatabasePassword);
-            var tenantStream = new TenantStream()
-            {
-                StreamId = Guid.NewGuid(),
+            tenant.Domain = tenant.Domain.ToLowerInvariant ();
+            tenant.DatabasePassword = this.dataProtector.Protect (tenant.DatabasePassword);
+            var tenantStream = new TenantStream () {
+                StreamId = Guid.NewGuid (),
                 Version = 0,
-                Data = JsonConvert.SerializeObject(tenant),
+                Data = JsonConvert.SerializeObject (tenant),
                 Event = "AddTenant",
                 InsertedAt = DateTime.UtcNow,
                 InsertedBy = userEmail
             };
-            this.AddTenantUniqueConstraints(tenantStream, tenant);
-            this.context.TenantStreams.Add(tenantStream);
-            try
-            {
-                await this.context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
+            this.AddTenantUniqueConstraints (tenantStream, tenant);
+            this.context.TenantStreams.Add (tenantStream);
+            try {
+                await this.context.SaveChangesAsync ();
+            } catch (DbUpdateException ex) {
                 var postgresException = ex.InnerException as PostgresException;
-                if (postgresException.SqlState == "23505")
-                {
+                if (postgresException.SqlState == "23505") {
                     var uniqueIndexViolation = postgresException.ConstraintName;
-                    switch (uniqueIndexViolation)
-                    {
+                    switch (uniqueIndexViolation) {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
+                                throw new EventStreamDataConstraintException ("The domain name is in use by another tenant");
                             }
                         default:
                             {
-                                throw new EventStreamDataConstraintException("");
+                                throw new EventStreamDataConstraintException ("");
                             }
                     }
                 }
@@ -75,61 +63,48 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        public async Task<string> SoftDelete(string userEmail, string tenantId)
-        {
-            if (string.IsNullOrWhiteSpace(userEmail))
-            {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
+        public async Task<string> SoftDelete (string userEmail, string tenantId) {
+            if (string.IsNullOrWhiteSpace (userEmail)) {
+                throw new ArgumentException ($"{nameof(userEmail)} was null or whitespace");
             }
 
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            if (string.IsNullOrWhiteSpace (tenantId)) {
+                throw new ArgumentException ($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
-            if (currentTenantStream is null)
-            {
-                throw new ArgumentException($"No tenant was found with domain '{tenantId}'");
-            }
-            else
-            {
-                var currentTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync (tenantId);
+            if (currentTenantStream is null) {
+                throw new ArgumentException ($"No tenant was found with domain '{tenantId}'");
+            } else {
+                var currentTenant = JsonConvert.DeserializeObject<Tenant> (currentTenantStream.Data);
                 currentTenant.Deleted = true;
                 currentTenant.Confirmed = false;
                 var deleted = false;
                 var maxConcurrencyAttempts = 3;
-                while (!deleted && maxConcurrencyAttempts != 0)
-                {
+                while (!deleted && maxConcurrencyAttempts != 0) {
 
-                    var updatedTenantStream = new TenantStream
-                    {
-                        StreamId = currentTenantStream.StreamId,
-                        Version = currentTenantStream.Version + 1,
-                        Data = JsonConvert.SerializeObject(currentTenant),
-                        Event = "TenantDeleted",
-                        InsertedAt = DateTime.UtcNow,
-                        InsertedBy = userEmail
+                    var updatedTenantStream = new TenantStream {
+                    StreamId = currentTenantStream.StreamId,
+                    Version = currentTenantStream.Version + 1,
+                    Data = JsonConvert.SerializeObject (currentTenant),
+                    Event = "TenantDeleted",
+                    InsertedAt = DateTime.UtcNow,
+                    InsertedBy = userEmail
                     };
-                    this.context.TenantUniqueConstraints.Remove(await this.context.TenantUniqueConstraints.Where(_ => _.TenantId == currentTenant.TenantId).SingleAsync());
-                    this.context.TenantStreams.Add(updatedTenantStream);
-                    try
-                    {
-                        await this.context.SaveChangesAsync();
+                    this.context.TenantUniqueConstraints.Remove (await this.context.TenantUniqueConstraints.Where (_ => _.TenantId == currentTenant.TenantId).SingleAsync ());
+                    this.context.TenantStreams.Add (updatedTenantStream);
+                    try {
+                        await this.context.SaveChangesAsync ();
                         deleted = true;
-                        logger.LogInformation($"Tenant with domain {currentTenant.Domain} deleted");
-                    }
-                    catch (DbUpdateException ex)
-                    {
+                        logger.LogInformation ($"Tenant with domain {currentTenant.Domain} deleted");
+                    } catch (DbUpdateException ex) {
                         var postgresException = ex.InnerException as PostgresException;
-                        if (postgresException.SqlState == "23505")
-                        {
+                        if (postgresException.SqlState == "23505") {
                             var uniqueIndexViolation = postgresException.ConstraintName;
-                            switch (uniqueIndexViolation)
-                            {
+                            switch (uniqueIndexViolation) {
                                 case TenantJsonbConstraintNames.TenantId_Version:
                                     {
-                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentTenantStream.Version + 1}'");
+                                        logger.LogError ($"The update version number was outdated. The current and updated stream versions are '{currentTenantStream.Version + 1}'");
                                         maxConcurrencyAttempts--;
                                         continue;
                                     }
@@ -138,28 +113,24 @@ namespace Ranger.Services.Tenants.Data
                         throw;
                     }
                 }
-                if (!deleted)
-                {
-                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted");
+                if (!deleted) {
+                    throw new ConcurrencyException ($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted");
                 }
                 return currentTenant.OrganizationName;
             }
         }
 
-        public async Task<bool> ExistsAsync(string domain)
-        {
-            return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
+        public async Task<bool> ExistsAsync (string domain) {
+            return await context.TenantUniqueConstraints.AnyAsync ((t => t.Domain == domain.ToLowerInvariant ()));
         }
 
-        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByDomainAsync(string domain)
-        {
-            if (string.IsNullOrWhiteSpace(domain))
-            {
-                throw new ArgumentException("message", nameof(domain));
+        public async Task < (Tenant tenant, int version) > GetNotDeletedTenantByDomainAsync (string domain) {
+            if (string.IsNullOrWhiteSpace (domain)) {
+                throw new ArgumentException ("message", nameof (domain));
             }
 
             var tenantStream = await this.context.TenantStreams
-            .FromSqlInterpolated($@"
+                .FromSqlInterpolated ($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
 					    SELECT t.id,
@@ -181,25 +152,22 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_at,
                         t.inserted_by
                     FROM not_deleted t
-                    ORDER BY t.stream_id, t.version DESC) AS tenantstreams").FirstOrDefaultAsync();
-            if (!(tenantStream is null))
-            {
-                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-                tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+                    ORDER BY t.stream_id, t.version DESC) AS tenantstreams").FirstOrDefaultAsync ();
+            if (!(tenantStream is null)) {
+                var tenant = JsonConvert.DeserializeObject<Tenant> (tenantStream.Data);
+                tenant.DatabasePassword = dataProtector.Unprotect (tenant.DatabasePassword);
                 return (tenant, tenantStream.Version);
             }
             return (null, 0);
         }
 
-        public async Task<bool> IsTenantConfirmedAsync(string domain)
-        {
-            if (string.IsNullOrWhiteSpace(domain))
-            {
-                throw new ArgumentException("message", nameof(domain));
+        public async Task<bool> IsTenantConfirmedAsync (string domain) {
+            if (string.IsNullOrWhiteSpace (domain)) {
+                throw new ArgumentException ("message", nameof (domain));
             }
 
             var tenantStream = await this.context.TenantStreams
-            .FromSqlInterpolated($@"
+                .FromSqlInterpolated ($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
                         SELECT
@@ -211,7 +179,7 @@ namespace Ranger.Services.Tenants.Data
                             t.inserted_at,
                             t.inserted_by
                     	FROM tenant_streams t, tenant_unique_constraints tuc
-                    	WHERE tuc.domain = {domain} 
+                    	WHERE tuc.domain = {domain.ToLowerInvariant()} 
                         AND (t.data ->> 'Domain') = tuc.domain::text
                     )
                     SELECT 
@@ -223,31 +191,27 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_at,
                         t.inserted_by
             	    FROM not_deleted t
-            	    WHERE event = 'TenantConfirmed') AS tenantstreams").FirstOrDefaultAsync();
+            	    WHERE event = 'TenantConfirmed') AS tenantstreams").FirstOrDefaultAsync ();
             return tenantStream is null ? false : true;
         }
 
-        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                throw new ArgumentException("message", nameof(tenantId));
+        public async Task < (Tenant tenant, int version) > GetNotDeletedTenantByTenantIdAsync (string tenantId) {
+            if (string.IsNullOrWhiteSpace (tenantId)) {
+                throw new ArgumentException ("message", nameof (tenantId));
             }
 
-            var tenantStream = await GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
-            if (!(tenantStream is null))
-            {
-                var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-                tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
+            var tenantStream = await GetNotDeletedTenantStreamByTenantIdAsync (tenantId);
+            if (!(tenantStream is null)) {
+                var tenant = JsonConvert.DeserializeObject<Tenant> (tenantStream.Data);
+                tenant.DatabasePassword = dataProtector.Unprotect (tenant.DatabasePassword);
                 return (tenant, tenantStream.Version);
             }
             return (null, 0);
         }
 
-        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
-        {
+        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync (string tenantId) {
             return await this.context.TenantStreams
-            .FromSqlInterpolated($@"
+                .FromSqlInterpolated ($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
                         SELECT    
@@ -271,12 +235,11 @@ namespace Ranger.Services.Tenants.Data
                     t.inserted_at,
                     t.inserted_by
                 FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC) as tenantstream").FirstOrDefaultAsync();
+                ORDER BY t.stream_id, t.version DESC) as tenantstream").FirstOrDefaultAsync ();
         }
 
-        public async Task<IEnumerable<Tenant>> GetAllNotDeletedAndConfirmedTenantsAsync()
-        {
-            var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated($@"
+        public async Task<IEnumerable<Tenant>> GetAllNotDeletedAndConfirmedTenantsAsync () {
+            var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated ($@"
                 SELECT * FROM (
                     WITH active_tenants AS (
 		                SELECT 
@@ -308,49 +271,41 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_by
                     FROM active_tenants at, tenant_streams t
                     WHERE t.stream_id = at.stream_id
-                    AND t.version = at.version) AS tenantstreams").ToListAsync();
-            if ((tenantStreams.Any()))
-            {
-                var tenants = new List<Tenant>();
-                foreach (var tenantStream in tenantStreams)
-                {
-                    var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
-                    tenant.DatabasePassword = dataProtector.Unprotect(tenant.DatabasePassword);
-                    tenants.Add(tenant);
+                    AND t.version = at.version) AS tenantstreams").ToListAsync ();
+            if ((tenantStreams.Any ())) {
+                var tenants = new List<Tenant> ();
+                foreach (var tenantStream in tenantStreams) {
+                    var tenant = JsonConvert.DeserializeObject<Tenant> (tenantStream.Data);
+                    tenant.DatabasePassword = dataProtector.Unprotect (tenant.DatabasePassword);
+                    tenants.Add (tenant);
                 }
                 return tenants;
             }
-            return new List<Tenant>();
+            return new List<Tenant> ();
         }
 
-        public Task UpdateLastAccessed(string domain)
-        {
-            throw new System.NotImplementedException();
+        public Task UpdateLastAccessed (string domain) {
+            throw new System.NotImplementedException ();
         }
 
-        public async Task CompletePrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransferStateEnum state)
-        {
-            if (string.IsNullOrWhiteSpace(userEmail))
-            {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
+        public async Task CompletePrimaryOwnerTransferAsync (string userEmail, string tenantId, PrimaryOwnerTransferStateEnum state) {
+            if (string.IsNullOrWhiteSpace (userEmail)) {
+                throw new ArgumentException ($"{nameof(userEmail)} was null or whitespace");
             }
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            if (string.IsNullOrWhiteSpace (tenantId)) {
+                throw new ArgumentException ($"{nameof(tenantId)} was null or whitespace");
             }
-            if (state is PrimaryOwnerTransferStateEnum.Pending)
-            {
-                throw new ArgumentException("A primary owner transfer cannot be completed with a 'Pending' status");
+            if (state is PrimaryOwnerTransferStateEnum.Pending) {
+                throw new ArgumentException ("A primary owner transfer cannot be completed with a 'Pending' status");
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
-            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync (tenantId);
+            var tenant = JsonConvert.DeserializeObject<Tenant> (tenantStream.Data);
 
             tenant.PrimaryOwnerTransfer.State = state;
 
-            var serializedTenantData = JsonConvert.SerializeObject(tenant);
-            var updatedTenantStream = new TenantStream()
-            {
+            var serializedTenantData = JsonConvert.SerializeObject (tenant);
+            var updatedTenantStream = new TenantStream () {
                 StreamId = tenantStream.StreamId,
                 Version = tenantStream.Version + 1,
                 Data = serializedTenantData,
@@ -359,30 +314,25 @@ namespace Ranger.Services.Tenants.Data
                 InsertedBy = userEmail
             };
 
-            this.context.TenantStreams.Add(updatedTenantStream);
-            try
-            {
-                await this.context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
+            this.context.TenantStreams.Add (updatedTenantStream);
+            try {
+                await this.context.SaveChangesAsync ();
+            } catch (DbUpdateException ex) {
                 var postgresException = ex.InnerException as PostgresException;
-                if (postgresException.SqlState == "23505")
-                {
+                if (postgresException.SqlState == "23505") {
                     var uniqueIndexViolation = postgresException.ConstraintName;
-                    switch (uniqueIndexViolation)
-                    {
+                    switch (uniqueIndexViolation) {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
+                                throw new EventStreamDataConstraintException ("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
+                                throw new ConcurrencyException ($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
                             }
                         default:
                             {
-                                throw new EventStreamDataConstraintException("");
+                                throw new EventStreamDataConstraintException ("");
                             }
                     }
                 }
@@ -391,29 +341,24 @@ namespace Ranger.Services.Tenants.Data
 
         }
 
-        public async Task AddPrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransfer transfer)
-        {
-            if (string.IsNullOrWhiteSpace(userEmail))
-            {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
+        public async Task AddPrimaryOwnerTransferAsync (string userEmail, string tenantId, PrimaryOwnerTransfer transfer) {
+            if (string.IsNullOrWhiteSpace (userEmail)) {
+                throw new ArgumentException ($"{nameof(userEmail)} was null or whitespace");
             }
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            if (string.IsNullOrWhiteSpace (tenantId)) {
+                throw new ArgumentException ($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
-            var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
+            var tenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync (tenantId);
+            var tenant = JsonConvert.DeserializeObject<Tenant> (tenantStream.Data);
 
-            if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending)
-            {
-                throw new ConcurrencyException("A primary owner transfer is currently pending");
+            if (!(tenant.PrimaryOwnerTransfer is null) && tenant.PrimaryOwnerTransfer.State is PrimaryOwnerTransferStateEnum.Pending) {
+                throw new ConcurrencyException ("A primary owner transfer is currently pending");
             }
             tenant.PrimaryOwnerTransfer = transfer;
 
-            var serializedTenantData = JsonConvert.SerializeObject(tenant);
-            var updatedTenantStream = new TenantStream()
-            {
+            var serializedTenantData = JsonConvert.SerializeObject (tenant);
+            var updatedTenantStream = new TenantStream () {
                 StreamId = tenantStream.StreamId,
                 Version = tenantStream.Version + 1,
                 Data = serializedTenantData,
@@ -422,30 +367,25 @@ namespace Ranger.Services.Tenants.Data
                 InsertedBy = userEmail
             };
 
-            this.context.TenantStreams.Add(updatedTenantStream);
-            try
-            {
-                await this.context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
+            this.context.TenantStreams.Add (updatedTenantStream);
+            try {
+                await this.context.SaveChangesAsync ();
+            } catch (DbUpdateException ex) {
                 var postgresException = ex.InnerException as PostgresException;
-                if (postgresException.SqlState == "23505")
-                {
+                if (postgresException.SqlState == "23505") {
                     var uniqueIndexViolation = postgresException.ConstraintName;
-                    switch (uniqueIndexViolation)
-                    {
+                    switch (uniqueIndexViolation) {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
+                                throw new EventStreamDataConstraintException ("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
+                                throw new ConcurrencyException ($"The update version number was outdated. The request update version was '{tenantStream.Version}'");
                             }
                         default:
                             {
-                                throw new EventStreamDataConstraintException("");
+                                throw new EventStreamDataConstraintException ("");
                             }
                     }
                 }
@@ -453,39 +393,34 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        public async Task UpdateTenantAsync(string userEmail, string eventName, int version, Tenant tenant)
-        {
-            if (string.IsNullOrWhiteSpace(userEmail))
-            {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
+        public async Task UpdateTenantAsync (string userEmail, string eventName, int version, Tenant tenant) {
+            if (string.IsNullOrWhiteSpace (userEmail)) {
+                throw new ArgumentException ($"{nameof(userEmail)} was null or whitespace");
             }
 
-            if (string.IsNullOrWhiteSpace(eventName))
-            {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
+            if (string.IsNullOrWhiteSpace (eventName)) {
+                throw new ArgumentException ($"{nameof(eventName)} was null or whitespace");
             }
-            if (tenant is null)
-            {
-                throw new ArgumentException($"{nameof(tenant)} was null");
+            if (tenant is null) {
+                throw new ArgumentException ($"{nameof(tenant)} was null");
             }
 
-            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync(tenant.TenantId);
-            ValidateRequestVersionIncremented(version, currentTenantStream);
+            var currentTenantStream = await this.GetNotDeletedTenantStreamByTenantIdAsync (tenant.TenantId);
+            ValidateRequestVersionIncremented (version, currentTenantStream);
 
             //These fields cannot be edited through this Update method
-            var outdatedTenant = JsonConvert.DeserializeObject<Tenant>(currentTenantStream.Data);
+            var outdatedTenant = JsonConvert.DeserializeObject<Tenant> (currentTenantStream.Data);
             tenant.TenantId = outdatedTenant.TenantId;
             tenant.CreatedOn = outdatedTenant.CreatedOn;
             tenant.DatabasePassword = outdatedTenant.DatabasePassword;
             tenant.PrimaryOwnerTransfer = outdatedTenant.PrimaryOwnerTransfer;
             tenant.Deleted = false;
 
-            var serializedNewTenantData = JsonConvert.SerializeObject(tenant);
-            var uniqueConstraint = await this.GetTenantUniqueConstraintAsync(tenant.TenantId);
+            var serializedNewTenantData = JsonConvert.SerializeObject (tenant);
+            var uniqueConstraint = await this.GetTenantUniqueConstraintAsync (tenant.TenantId);
             uniqueConstraint.Domain = tenant.Domain;
 
-            var updatedTenantStream = new TenantStream()
-            {
+            var updatedTenantStream = new TenantStream () {
                 StreamId = currentTenantStream.StreamId,
                 Version = version,
                 Data = serializedNewTenantData,
@@ -494,31 +429,26 @@ namespace Ranger.Services.Tenants.Data
                 InsertedBy = userEmail
             };
 
-            this.context.Update(uniqueConstraint);
-            this.context.TenantStreams.Add(updatedTenantStream);
-            try
-            {
-                await this.context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
+            this.context.Update (uniqueConstraint);
+            this.context.TenantStreams.Add (updatedTenantStream);
+            try {
+                await this.context.SaveChangesAsync ();
+            } catch (DbUpdateException ex) {
                 var postgresException = ex.InnerException as PostgresException;
-                if (postgresException.SqlState == "23505")
-                {
+                if (postgresException.SqlState == "23505") {
                     var uniqueIndexViolation = postgresException.ConstraintName;
-                    switch (uniqueIndexViolation)
-                    {
+                    switch (uniqueIndexViolation) {
                         case TenantJsonbConstraintNames.Domain:
                             {
-                                throw new EventStreamDataConstraintException("The domain name is in use by another tenant");
+                                throw new EventStreamDataConstraintException ("The domain name is in use by another tenant");
                             }
                         case TenantJsonbConstraintNames.TenantId_Version:
                             {
-                                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
+                                throw new ConcurrencyException ($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
                             }
                         default:
                             {
-                                throw new EventStreamDataConstraintException("");
+                                throw new EventStreamDataConstraintException ("");
                             }
                     }
                 }
@@ -526,41 +456,33 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        private static void ValidateDataJsonInequality(TenantStream currentProjectStream, string serializedNewProjectData)
-        {
-            var currentJObject = JsonConvert.DeserializeObject<JObject>(currentProjectStream.Data);
-            var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewProjectData);
-            if (JToken.DeepEquals(currentJObject, requestJObject))
-            {
-                throw new NoOpException("No changes were made from the previous version");
+        private static void ValidateDataJsonInequality (TenantStream currentProjectStream, string serializedNewProjectData) {
+            var currentJObject = JsonConvert.DeserializeObject<JObject> (currentProjectStream.Data);
+            var requestJObject = JsonConvert.DeserializeObject<JObject> (serializedNewProjectData);
+            if (JToken.DeepEquals (currentJObject, requestJObject)) {
+                throw new NoOpException ("No changes were made from the previous version");
             }
         }
 
-        private static void ValidateRequestVersionIncremented(int version, TenantStream currentTenantStream)
-        {
-            if (version - currentTenantStream.Version > 1)
-            {
-                throw new ConcurrencyException($"The version number '{version}' was too high. The current resource is at version '{currentTenantStream.Version}'");
+        private static void ValidateRequestVersionIncremented (int version, TenantStream currentTenantStream) {
+            if (version - currentTenantStream.Version > 1) {
+                throw new ConcurrencyException ($"The version number '{version}' was too high. The current resource is at version '{currentTenantStream.Version}'");
             }
-            if (version - currentTenantStream.Version <= 0)
-            {
-                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
+            if (version - currentTenantStream.Version <= 0) {
+                throw new ConcurrencyException ($"The version number '{version}' was outdated. The current resource is at version '{currentTenantStream.Version}'. Re-request the resource to view the latest changes");
             }
         }
 
-        private void AddTenantUniqueConstraints(TenantStream tenantStream, Tenant tenant)
-        {
-            var domainUniqueConstraint = new TenantUniqueConstraint
-            {
+        private void AddTenantUniqueConstraints (TenantStream tenantStream, Tenant tenant) {
+            var domainUniqueConstraint = new TenantUniqueConstraint {
                 TenantId = tenant.TenantId,
                 Domain = tenant.Domain
             };
-            this.context.TenantUniqueConstraints.Add(domainUniqueConstraint);
+            this.context.TenantUniqueConstraints.Add (domainUniqueConstraint);
         }
 
-        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(string tenantId)
-        {
-            return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId);
+        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync (string tenantId) {
+            return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync (_ => _.TenantId == tenantId);
         }
     }
 }
