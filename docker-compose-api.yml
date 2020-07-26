@@ -6,14 +6,9 @@ services:
         ports:
             - '8082:8082'
         networks:
-            - tenants
             - ranger
 
 networks:
     ranger:
         name: ranger-network
-        external: true
-
-    tenants:
-        name: tenants-network
         external: true
