@@ -46,10 +46,9 @@ namespace Ranger.Services.Tenants
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
-
-            services.AddAutoWrapper();
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
             services.AddSwaggerGen("Tenants API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
             services.AddDbContext<TenantsDbContext>(options =>
             {
