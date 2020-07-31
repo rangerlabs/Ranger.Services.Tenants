@@ -170,7 +170,7 @@ namespace Ranger.Services.Tenants.Data
                             t.inserted_at,
                             t.inserted_by
 					    FROM tenant_streams t, tenant_unique_constraints tuc
-					    WHERE tuc.domain = {domain} AND (t.data ->> 'Domain') = tuc.domain::text
+					    WHERE tuc.domain = {domain} AND (t.data ->> 'TenantId') = tuc.tenant_id::text
                     )
                    SELECT DISTINCT ON (t.stream_id)
                         t.id,
@@ -212,7 +212,7 @@ namespace Ranger.Services.Tenants.Data
                             t.inserted_by
                     	FROM tenant_streams t, tenant_unique_constraints tuc
                     	WHERE tuc.domain = {domain.ToLowerInvariant()} 
-                        AND (t.data ->> 'Domain') = tuc.domain::text
+                        AND (t.data ->> 'TenantId') = tuc.tenant_id::text
                     )
                     SELECT 
                         t.id,
