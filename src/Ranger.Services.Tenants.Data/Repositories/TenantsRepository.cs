@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -146,12 +147,12 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        public async Task<bool> ExistsAsync(string domain)
+        public async Task<bool> ExistsAsync(string domain, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()));
+            return await context.TenantUniqueConstraints.AnyAsync((t => t.Domain == domain.ToLowerInvariant()), cancellationToken);
         }
 
-        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByDomainAsync(string domain)
+        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByDomainAsync(string domain, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
@@ -181,7 +182,7 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_at,
                         t.inserted_by
                     FROM not_deleted t
-                    ORDER BY t.stream_id, t.version DESC) AS tenantstreams").FirstOrDefaultAsync();
+                    ORDER BY t.stream_id, t.version DESC) AS tenantstreams").FirstOrDefaultAsync(cancellationToken);
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -191,7 +192,7 @@ namespace Ranger.Services.Tenants.Data
             return (null, 0);
         }
 
-        public async Task<bool> IsTenantConfirmedAsync(string domain)
+        public async Task<bool> IsTenantConfirmedAsync(string domain, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
@@ -223,18 +224,18 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_at,
                         t.inserted_by
             	    FROM not_deleted t
-            	    WHERE event = 'TenantConfirmed') AS tenantstreams").FirstOrDefaultAsync();
+            	    WHERE event = 'TenantConfirmed') AS tenantstreams").FirstOrDefaultAsync(cancellationToken);
             return tenantStream is null ? false : true;
         }
 
-        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId)
+        public async Task<(Tenant tenant, int version)> GetNotDeletedTenantByTenantIdAsync(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 throw new ArgumentException("message", nameof(tenantId));
             }
 
-            var tenantStream = await GetNotDeletedTenantStreamByTenantIdAsync(tenantId);
+            var tenantStream = await GetNotDeletedTenantStreamByTenantIdAsync(tenantId, cancellationToken);
             if (!(tenantStream is null))
             {
                 var tenant = JsonConvert.DeserializeObject<Tenant>(tenantStream.Data);
@@ -244,7 +245,7 @@ namespace Ranger.Services.Tenants.Data
             return (null, 0);
         }
 
-        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId)
+        private async Task<TenantStream> GetNotDeletedTenantStreamByTenantIdAsync(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await this.context.TenantStreams
                 .FromSqlInterpolated($@"
@@ -271,10 +272,10 @@ namespace Ranger.Services.Tenants.Data
                     t.inserted_at,
                     t.inserted_by
                 FROM not_deleted t
-                ORDER BY t.stream_id, t.version DESC) as tenantstream").FirstOrDefaultAsync();
+                ORDER BY t.stream_id, t.version DESC) as tenantstream").FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Tenant>> GetAllNotDeletedAndConfirmedTenantsAsync()
+        public async Task<IEnumerable<Tenant>> GetAllNotDeletedAndConfirmedTenantsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var tenantStreams = await this.context.TenantStreams.FromSqlInterpolated($@"
                 SELECT * FROM (
@@ -308,7 +309,7 @@ namespace Ranger.Services.Tenants.Data
                         t.inserted_by
                     FROM active_tenants at, tenant_streams t
                     WHERE t.stream_id = at.stream_id
-                    AND t.version = at.version) AS tenantstreams").ToListAsync();
+                    AND t.version = at.version) AS tenantstreams").ToListAsync(cancellationToken);
             if ((tenantStreams.Any()))
             {
                 var tenants = new List<Tenant>();
@@ -558,9 +559,9 @@ namespace Ranger.Services.Tenants.Data
             this.context.TenantUniqueConstraints.Add(domainUniqueConstraint);
         }
 
-        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(string tenantId)
+        private async Task<TenantUniqueConstraint> GetTenantUniqueConstraintAsync(string tenantId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId);
+            return await this.context.TenantUniqueConstraints.SingleOrDefaultAsync(_ => _.TenantId == tenantId, cancellationToken);
         }
     }
 }
