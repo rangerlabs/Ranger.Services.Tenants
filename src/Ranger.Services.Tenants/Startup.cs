@@ -91,8 +91,6 @@ namespace Ranger.Services.Tenants
         {
             this.loggerFactory = loggerFactory;
 
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
-
             app.UseSwagger("v1", "Tenants API");
             app.UseAutoWrapper();
 
@@ -111,7 +109,7 @@ namespace Ranger.Services.Tenants
                 endpoints.MapRabbitMQHealthCheck();
             });
 
-            this.busSubscriber = app.UseRabbitMQ()
+            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<CreateTenant>((c, e) =>
                    new CreateTenantRejected(e.Message, ""))
                 .SubscribeCommand<DeleteTenant>((c, e) =>
@@ -122,11 +120,6 @@ namespace Ranger.Services.Tenants
                    new CompletePrimaryOwnerTransferRejected(e.Message, ""))
                 .SubscribeCommand<UpdateTenantOrganization>((c, e) =>
                    new UpdateTenantOrganizationRejected(e.Message, ""));
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
     }
 }
