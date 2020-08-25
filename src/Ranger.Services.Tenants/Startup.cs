@@ -87,18 +87,14 @@ namespace Ranger.Services.Tenants
             builder.AddRabbitMq();
         }
 
-        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
         {
-            this.loggerFactory = loggerFactory;
-
             app.UseSwagger("v1", "Tenants API");
             app.UseAutoWrapper();
-
+            app.UseUnhandedExceptionLogger();
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
