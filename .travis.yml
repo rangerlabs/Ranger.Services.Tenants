@@ -1,13 +1,25 @@
 language: csharp
 mono: none
 sudo: required
+addons:
+  postgresql: "12"
+  apt:
+    packages:
+    - postgresql-12
+    - postgresql-client-12
+env:
+  global:
+    - PGPORT=5432
 services:
     - docker
+    - rabbitmq
+    - postgresql
 branches:
     only:
         - master
 before_script:
     - chmod -R a+x scripts
+    - psql -c 'create database integrations;' -U postgres
 script:
     - './scripts/travis-build.sh'
 after_success:
