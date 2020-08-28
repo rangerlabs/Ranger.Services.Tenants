@@ -9,7 +9,7 @@ addons:
     - postgresql-client-12
 env:
   global:
-    - PGPORT=5432
+    - PGPORT=5433
 services:
     - docker
     - rabbitmq
