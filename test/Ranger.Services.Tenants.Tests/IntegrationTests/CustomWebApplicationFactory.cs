@@ -14,8 +14,8 @@ public class CustomWebApplicationFactory
         builder.ConfigureServices(services =>
         {
             // Create a new service provider.
-            var serviceProvider = new ServiceCollection()
-                .BuildServiceProvider();
+            // var serviceProvider = new ServiceCollection()
+            //     .BuildServiceProvider();
 
             // Build the service provider.
             var sp = services.BuildServiceProvider();
