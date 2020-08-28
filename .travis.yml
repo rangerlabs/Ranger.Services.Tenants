@@ -2,6 +2,9 @@ language: csharp
 mono: none
 dotnet: 3.1.401
 sudo: required
+env:
+    global:
+        - ASPNETCORE_ENVIRONMENT=Production
 addons:
   apt:
     packages:

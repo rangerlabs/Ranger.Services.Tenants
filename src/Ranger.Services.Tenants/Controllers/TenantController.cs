@@ -32,6 +32,7 @@ namespace Ranger.Services.Tenants
         /// </summary>
         /// <param name="tenantId">The tenant's unique identitfier</param>
         /// <param name="domain">The tenant's domain identitfier</param>
+        /// <param name="cancellationToken"></param>
         [HttpGet("/tenants")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,6 +78,7 @@ namespace Ranger.Services.Tenants
         /// Determines whether a domain has been reserved
         /// </summary>
         /// <param name="domain">The tenant's domain</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/tenants/{domain}/exists")]
         public async Task<ApiResponse> GetExists(string domain, CancellationToken cancellationToken)
@@ -98,6 +100,7 @@ namespace Ranger.Services.Tenants
         /// Determines whether the tenant with the requested domain has been confirmed
         /// </summary>
         /// <param name="domain">The tenant's domain</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/tenants/{domain}/confirmed")]
@@ -116,6 +119,7 @@ namespace Ranger.Services.Tenants
         /// Gets details of a pending Primary Owner Transfer
         /// </summary>
         /// <param name="domain">The tenant's domain</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("/tenants/{domain}/primary-owner-transfer")]
