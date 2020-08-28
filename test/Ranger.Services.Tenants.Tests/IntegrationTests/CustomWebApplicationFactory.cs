@@ -1,8 +1,8 @@
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Ranger.Services.Tenants;
 using Ranger.Services.Tenants.Data;
 
@@ -15,7 +15,6 @@ public class CustomWebApplicationFactory
         {
             // Create a new service provider.
             var serviceProvider = new ServiceCollection()
-                .AddAutofac()
                 .BuildServiceProvider();
 
             // Build the service provider.
@@ -32,4 +31,9 @@ public class CustomWebApplicationFactory
             }
         });
     }
+
+    protected override IWebHostBuilder CreateWebHostBuilder() =>
+        WebHost.CreateDefaultBuilder()
+           .UseStartup<Startup>()
+           .ConfigureServices(services => services.AddAutofac());
 }

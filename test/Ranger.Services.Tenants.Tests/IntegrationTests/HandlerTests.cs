@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Ranger.RabbitMQ;
 using Ranger.Services.Tenants.Data;
 using Shouldly;
