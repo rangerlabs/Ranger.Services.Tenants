@@ -22,6 +22,8 @@ before_script:
     - chmod -R a+x scripts
     - psql -c 'create database tenants;' -U postgres
 script:
+    - './scripts/create-nuget-config.sh'
+    - 'dotnet test'
     - './scripts/travis-build.sh'
 after_success:
     - './scripts/travis-docker-publish.sh'
