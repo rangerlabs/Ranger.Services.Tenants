@@ -60,7 +60,6 @@ namespace Ranger.Services.Tenants
             services.AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
             services.AddTransient<ITenantService, TenantsService>();
             services.AddTransient<ITenantsRepository, TenantsRepository>();
-            IdentityModelEventSource.ShowPII = true;
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
