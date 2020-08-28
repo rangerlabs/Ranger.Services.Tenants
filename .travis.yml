@@ -19,7 +19,7 @@ branches:
         - master
 before_script:
     - chmod -R a+x scripts
-    - psql -c 'create database tenants;' -U postgres -W postgres
+    - psql -c 'create database tenants;' -U postgres
 script:
     - './scripts/travis-build.sh'
 after_success:
