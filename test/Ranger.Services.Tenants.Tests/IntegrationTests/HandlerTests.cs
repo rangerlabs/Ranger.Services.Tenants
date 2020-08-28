@@ -14,12 +14,12 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
         private readonly ITenantsRepository tenantsRepository;
         private readonly WebApplicationFactory<Startup> _factory;
 
-        public HandlerTests(IBusPublisher busPublisher, ITenantService tenantService, ITenantsRepository tenantsRepository, WebApplicationFactory<Startup> factory)
+        public HandlerTests(WebApplicationFactory<Startup> factory)
         {
-            this.busPublisher = busPublisher;
-            this.tenantService = tenantService;
-            this.tenantsRepository = tenantsRepository;
             _factory = factory;
+            this.busPublisher = factory.Services.GetService(typeof(IBusPublisher)) as IBusPublisher;
+            this.tenantService = factory.Services.GetService(typeof(ITenantService)) as ITenantService;
+            this.tenantsRepository = factory.Services.GetService(typeof(ITenantsRepository)) as ITenantsRepository;
         }
 
         [Fact]
