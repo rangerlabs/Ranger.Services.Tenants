@@ -7,14 +7,14 @@ using Xunit;
 
 namespace Ranger.Services.Tenants.Tests.IntegrationTests
 {
-    public class HandlerTests : IClassFixture<WebApplicationFactory<Startup>>
+    public class HandlerTests : IClassFixture<CustomWebApplicationFactory>
     {
         private readonly IBusPublisher busPublisher;
         private readonly ITenantService tenantService;
         private readonly ITenantsRepository tenantsRepository;
-        private readonly WebApplicationFactory<Startup> _factory;
+        private readonly CustomWebApplicationFactory _factory;
 
-        public HandlerTests(WebApplicationFactory<Startup> factory)
+        public HandlerTests(CustomWebApplicationFactory factory)
         {
             _factory = factory;
             this.busPublisher = factory.Services.GetService(typeof(IBusPublisher)) as IBusPublisher;
