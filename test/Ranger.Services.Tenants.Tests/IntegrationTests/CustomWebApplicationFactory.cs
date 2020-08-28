@@ -26,7 +26,7 @@ public class CustomWebApplicationFactory
                 .Build();
 
             // Create a new service provider.
-            var serviceProvider = new ServiceCollection()
+            services
             .AddDbContext<TenantsDbContext>(options =>
             {
                 options.UseNpgsql(config["cloudSql:ConnectionString"]);
