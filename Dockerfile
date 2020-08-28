@@ -26,7 +26,6 @@ RUN dotnet restore
 COPY ./src ./src
 COPY ./test ./test
 
-RUN dotnet test
 RUN dotnet publish -c ${BUILD_CONFIG} -o /app/published --no-restore
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1

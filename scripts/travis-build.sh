@@ -10,4 +10,5 @@ case "$TRAVIS_BRANCH" in
     ;;
 esac
 
+dotnet test
 docker build -t rangerlabs/ranger.services.tenants:$DOCKER_TAG --build-arg MYGET_API_KEY=$MYGET_KEY --build-arg DOCKER_IMAGE_TAG=$DOCKER_TAG .
