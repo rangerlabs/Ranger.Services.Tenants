@@ -33,15 +33,13 @@ public class CustomWebApplicationFactory
             services.AddDbContext<TenantsDbContext>(options =>
                 {
                     options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
-                }, ServiceLifetime.Transient)
+                })
             .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
 
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<ITenantsDbContextInitializer>();
-                var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
-
                 dbInitializer.Migrate();
             }
         });

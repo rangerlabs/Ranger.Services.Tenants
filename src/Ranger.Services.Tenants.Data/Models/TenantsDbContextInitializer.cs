@@ -1,10 +1,4 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Ranger.Common;
 
 namespace Ranger.Services.Tenants.Data
 {
@@ -16,12 +10,6 @@ namespace Ranger.Services.Tenants.Data
         {
             this.context = context;
         }
-
-        public bool EnsureCreated()
-        {
-            return context.Database.EnsureCreated();
-        }
-
         public void Migrate()
         {
             context.Database.Migrate();
@@ -30,7 +18,6 @@ namespace Ranger.Services.Tenants.Data
 
     public interface ITenantsDbContextInitializer
     {
-        bool EnsureCreated();
         void Migrate();
     }
 }
