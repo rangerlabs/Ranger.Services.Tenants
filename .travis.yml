@@ -5,6 +5,7 @@ sudo: required
 env:
     global:
         - ASPNETCORE_ENVIRONMENT=Production
+        - PGPORT=5432
 addons:
   apt:
     packages:
