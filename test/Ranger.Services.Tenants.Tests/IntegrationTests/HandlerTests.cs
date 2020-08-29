@@ -26,6 +26,7 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
         {
             var msg = new CreateTenant("domain", "organization", "hello@gmail.com", "John", "Doe", "password");
             this.busPublisher.Send(msg, CorrelationContext.Empty);
+            await Task.Delay(500);
             var tenant = await this.tenantsRepository.GetNotDeletedTenantByDomainAsync("domain");
             tenant.tenant.Domain.ShouldBeSameAs(msg.Domain);
         }
