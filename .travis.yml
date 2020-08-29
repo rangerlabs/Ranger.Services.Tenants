@@ -22,7 +22,7 @@ branches:
         - master
 before_script:
     - chmod -R a+x scripts
-    - psql -c 'create database tenants;' -U postgres
+    - psql -c 'create database tenants;'
 script:
     - './scripts/create-nuget-config.sh $MYGET_KEY'
     - 'dotnet test'
