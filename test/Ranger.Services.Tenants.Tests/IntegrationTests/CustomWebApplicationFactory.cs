@@ -25,21 +25,13 @@ public class CustomWebApplicationFactory
                 .AddEnvironmentVariables()
                 .Build();
 
-            // Create a new service provider.
-            services
-            .AddDbContext<TenantsDbContext>(options =>
-            {
-                options.UseNpgsql(config["cloudSql:ConnectionString"]);
-            }, ServiceLifetime.Transient)
-            .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>()
-            .BuildServiceProvider();
+            services.AddDbContext<TenantsDbContext>(options =>
+                {
+                    options.UseNpgsql(config["cloudSql:ConnectionString"]);
+                }, ServiceLifetime.Transient)
+            .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
 
-
-            // Build the service provider.
             var sp = services.BuildServiceProvider();
-
-            // Create a scope to obtain a reference to the database
-            // context (ApplicationDbContext).
             using (var scope = sp.CreateScope())
             {
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<ITenantsDbContextInitializer>();
@@ -49,9 +41,4 @@ public class CustomWebApplicationFactory
             }
         });
     }
-
-    protected override IWebHostBuilder CreateWebHostBuilder() =>
-        WebHost.CreateDefaultBuilder()
-           .UseStartup<Startup>()
-           .ConfigureServices(services => services.AddAutofac());
 }
