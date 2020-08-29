@@ -103,7 +103,7 @@ namespace Ranger.Services.Tenants
                 endpoints.MapRabbitMQHealthCheck();
             });
 
-            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
+            this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateTenant>((c, e) =>
                    new CreateTenantRejected(e.Message, ""))
                 .SubscribeCommand<DeleteTenant>((c, e) =>

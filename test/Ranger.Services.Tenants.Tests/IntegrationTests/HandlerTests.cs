@@ -9,6 +9,7 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
     public class HandlerTests : IClassFixture<CustomWebApplicationFactory>
     {
         private readonly IBusPublisher busPublisher;
+        private readonly IBusSubscriber busSubscriber;
         private readonly ITenantService tenantService;
         private readonly ITenantsRepository tenantsRepository;
         private readonly CustomWebApplicationFactory _factory;
@@ -17,6 +18,7 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
         {
             _factory = factory;
             this.busPublisher = factory.Services.GetService(typeof(IBusPublisher)) as IBusPublisher;
+            this.busSubscriber = factory.Services.GetService(typeof(IBusSubscriber)) as IBusSubscriber;
             this.tenantService = factory.Services.GetService(typeof(ITenantService)) as ITenantService;
             this.tenantsRepository = factory.Services.GetService(typeof(ITenantsRepository)) as ITenantsRepository;
         }
@@ -26,7 +28,16 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
         {
             var msg = new CreateTenant("domain", "organization", "hello@gmail.com", "John", "Doe", "password");
             this.busPublisher.Send(msg, CorrelationContext.Empty);
-            await Task.Delay(500);
+
+            var handled = false;
+            this.busSubscriber.SubscribeEvent<TenantCreated>((m, c) =>
+            {
+                handled = true;
+                return Task.CompletedTask;
+            });
+
+            while (!handled) { }
+
             var tenant = await this.tenantsRepository.GetNotDeletedTenantByDomainAsync("domain");
             tenant.tenant.Domain.ShouldBe(msg.Domain);
         }
