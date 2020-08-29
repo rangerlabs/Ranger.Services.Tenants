@@ -6,14 +6,17 @@ env:
     global:
         - ASPNETCORE_ENVIRONMENT=Production
         - PGPORT=5432
+        - PGVER=12
 addons:
+  postgresql: '12'
   apt:
     packages:
     - rabbitmq-server
+    - postgresql-12
+    - postgresql-client-12
 services:
     - docker
     - rabbitmq
-    - postgresql
 branches:
     only:
         - master
