@@ -16,6 +16,8 @@ services:
 branches:
     only:
         - master
+jobs:
+  fast_finish: true
 before_script:
     - chmod -R a+x scripts
     - psql -c 'create database tenants;' -U postgres
