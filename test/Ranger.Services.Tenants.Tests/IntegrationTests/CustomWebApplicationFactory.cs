@@ -19,7 +19,6 @@ public class CustomWebApplicationFactory
 
         builder.ConfigureAppConfiguration((context, conf) =>
         {
-
             conf.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables();
@@ -27,6 +26,16 @@ public class CustomWebApplicationFactory
 
         builder.ConfigureServices(services =>
         {
+            var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+            services.AddDbContext<TenantsDbContext>(options =>
+                {
+                    options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
+                }, ServiceLifetime.Transient)
+            .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
+
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
