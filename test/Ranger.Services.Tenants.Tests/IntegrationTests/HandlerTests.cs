@@ -40,6 +40,11 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
 
             var tenant = await this.tenantsRepository.GetNotDeletedTenantByDomainAsync("domain");
             tenant.tenant.Domain.ShouldBe(msg.Domain);
+            tenant.tenant.OrganizationName.ShouldBe(msg.OrganizationName);
+            tenant.tenant.Confirmed.ShouldBeFalse();
+            tenant.tenant.Deleted.ShouldBeFalse();
+            tenant.tenant.Token.ShouldNotBeEmpty();
+            tenant.tenant.DatabasePassword.ShouldNotBeEmpty();
         }
     }
 }
