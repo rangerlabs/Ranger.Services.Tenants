@@ -5,6 +5,7 @@ sudo: required
 env:
     global:
         - ASPNETCORE_ENVIRONMENT=Production
+        - PGPORT=5433
         - PGVER=12
 addons:
   postgresql: '12'
