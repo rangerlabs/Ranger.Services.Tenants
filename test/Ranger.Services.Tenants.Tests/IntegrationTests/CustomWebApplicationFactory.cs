@@ -35,7 +35,7 @@ public class CustomWebApplicationFactory
             services.AddDbContext<TenantsDbContext>(options =>
                 {
                     options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
-                })
+                });
 
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
