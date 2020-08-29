@@ -28,7 +28,7 @@ namespace Ranger.Services.Tenants.Tests.IntegrationTests
             this.busPublisher.Send(msg, CorrelationContext.Empty);
             await Task.Delay(500);
             var tenant = await this.tenantsRepository.GetNotDeletedTenantByDomainAsync("domain");
-            tenant.tenant.Domain.ShouldBeSameAs(msg.Domain);
+            tenant.tenant.Domain.ShouldBe(msg.Domain);
         }
     }
 }
