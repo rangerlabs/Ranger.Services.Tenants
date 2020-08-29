@@ -17,20 +17,16 @@ public class CustomWebApplicationFactory
     {
         builder.UseEnvironment(Environments.Production);
 
+        builder.ConfigureAppConfiguration((context, conf) =>
+        {
+
+            conf.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables();
+        });
+
         builder.ConfigureServices(services =>
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            services.AddDbContext<TenantsDbContext>(options =>
-                {
-                    options.UseNpgsql(config["cloudSql:ConnectionString"]);
-                }, ServiceLifetime.Transient)
-            .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
-
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
