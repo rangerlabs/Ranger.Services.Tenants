@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Ranger.Services.Tenants;
 using Ranger.Services.Tenants.Data;
 
@@ -27,6 +28,7 @@ public class CustomWebApplicationFactory
         builder.ConfigureServices(services =>
         {
             var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
             .Build();
 
@@ -34,13 +36,14 @@ public class CustomWebApplicationFactory
                 {
                     options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
                 })
-            .AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
 
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
-                var dbInitializer = scope.ServiceProvider.GetRequiredService<ITenantsDbContextInitializer>();
-                dbInitializer.Migrate();
+                var logger = scope.ServiceProvider.GetService<ILogger<CustomWebApplicationFactory>>();
+                logger.LogInformation("ConnectionString: " + configuration["cloudSql:ConnectionString"]);
+                var context = scope.ServiceProvider.GetRequiredService<TenantsDbContext>();
+                context.Database.Migrate();
             }
         });
     }
