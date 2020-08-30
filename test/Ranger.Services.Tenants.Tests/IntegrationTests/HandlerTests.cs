@@ -30,7 +30,7 @@ namespace Ranger.Services.Tenants.Tests
             this.busPublisher.Send(msg, CorrelationContext.Empty);
 
             var handled = false;
-            this.busSubscriber.SubscribeEvent<TenantCreated>((m, c) =>
+            this.busSubscriber.SubscribeEventWithCallback<TenantCreated>((m, c) =>
             {
                 handled = true;
                 return Task.CompletedTask;
