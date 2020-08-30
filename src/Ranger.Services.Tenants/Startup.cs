@@ -103,15 +103,15 @@ namespace Ranger.Services.Tenants
             });
 
             app.UseRabbitMQ()
-                .SubscribeCommand<CreateTenant>((c, e) =>
+                .SubscribeCommandWithHandler<CreateTenant>((c, e) =>
                    new CreateTenantRejected(e.Message, ""))
-                .SubscribeCommand<DeleteTenant>((c, e) =>
+                .SubscribeCommandWithHandler<DeleteTenant>((c, e) =>
                    new DeleteTenantRejected(e.Message, ""))
-                .SubscribeCommand<InitiatePrimaryOwnerTransfer>((c, e) =>
+                .SubscribeCommandWithHandler<InitiatePrimaryOwnerTransfer>((c, e) =>
                    new InitiatePrimaryOwnerTransferRejected(e.Message, ""))
-                .SubscribeCommand<CompletePrimaryOwnerTransfer>((c, e) =>
+                .SubscribeCommandWithHandler<CompletePrimaryOwnerTransfer>((c, e) =>
                    new CompletePrimaryOwnerTransferRejected(e.Message, ""))
-                .SubscribeCommand<UpdateTenantOrganization>((c, e) =>
+                .SubscribeCommandWithHandler<UpdateTenantOrganization>((c, e) =>
                    new UpdateTenantOrganizationRejected(e.Message, ""));
         }
     }
