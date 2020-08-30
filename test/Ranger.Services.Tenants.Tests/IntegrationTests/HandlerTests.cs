@@ -4,7 +4,7 @@ using Ranger.Services.Tenants.Data;
 using Shouldly;
 using Xunit;
 
-namespace Ranger.Services.Tenants.Tests.IntegrationTests
+namespace Ranger.Services.Tenants.Tests
 {
     public class HandlerTests : IClassFixture<CustomWebApplicationFactory>
     {

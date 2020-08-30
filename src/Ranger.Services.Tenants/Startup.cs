@@ -25,7 +25,6 @@ namespace Ranger.Services.Tenants
     {
         private readonly IWebHostEnvironment Environment;
         private readonly IConfiguration configuration;
-        private IBusSubscriber busSubscriber;
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
@@ -103,7 +102,7 @@ namespace Ranger.Services.Tenants
                 endpoints.MapRabbitMQHealthCheck();
             });
 
-            this.busSubscriber = app.UseRabbitMQ()
+            app.UseRabbitMQ()
                 .SubscribeCommand<CreateTenant>((c, e) =>
                    new CreateTenantRejected(e.Message, ""))
                 .SubscribeCommand<DeleteTenant>((c, e) =>
