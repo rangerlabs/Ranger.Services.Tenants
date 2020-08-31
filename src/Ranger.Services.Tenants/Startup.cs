@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
+using Ranger.Common;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Operations.Messages.Tenants.RejectedEvents;
