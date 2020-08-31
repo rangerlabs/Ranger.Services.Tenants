@@ -66,12 +66,21 @@ namespace Ranger.Services.Tenants
                     options.ApiName = "tenantsApi";
                     options.RequireHttpsMetadata = false;
                 });
-
-            services.AddDataProtection()
-                .SetApplicationName("Tenants")
-                .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<TenantsDbContext>();
+            // Workaround for MAC validation issues on MacOS
+            if (configuration.IsIntegrationTesting())
+            {
+                services.AddDataProtection()
+                   .SetApplicationName("Tenants")
+                   .PersistKeysToDbContext<TenantsDbContext>();
+            }
+            else
+            {
+                services.AddDataProtection()
+                    .SetApplicationName("Tenants")
+                    .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .PersistKeysToDbContext<TenantsDbContext>();
+            }
 
             services.AddLiveHealthCheck();
             services.AddEntityFrameworkHealthCheck<TenantsDbContext>();
