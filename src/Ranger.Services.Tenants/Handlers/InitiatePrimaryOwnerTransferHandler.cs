@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Tenants.Data;
 
 namespace Ranger.Services.Tenants.Handlers
