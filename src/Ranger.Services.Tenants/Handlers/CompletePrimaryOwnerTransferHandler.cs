@@ -11,35 +11,38 @@ namespace Ranger.Services.Tenants.Handlers
 {
     public class CompletePrimaryOwnerTransferHandler : ICommandHandler<CompletePrimaryOwnerTransfer>
     {
-        private readonly ILogger<CompletePrimaryOwnerTransferHandler> logger;
-        private readonly ITenantsRepository tenantsRepository;
-        private readonly IBusPublisher busPublisher;
+        private readonly ILogger<CompletePrimaryOwnerTransferHandler> _logger;
+        private readonly ITenantService _tenantService;
+        private readonly ITenantsRepository _tenantsRepository;
+        private readonly IBusPublisher _busPublisher;
 
-        public CompletePrimaryOwnerTransferHandler(ILogger<CompletePrimaryOwnerTransferHandler> logger, ITenantsRepository tenantsRepository, IBusPublisher busPublisher)
+        public CompletePrimaryOwnerTransferHandler(ILogger<CompletePrimaryOwnerTransferHandler> logger, ITenantService tenantService, ITenantsRepository tenantsRepository, IBusPublisher busPublisher)
         {
-            this.logger = logger;
-            this.tenantsRepository = tenantsRepository;
-            this.busPublisher = busPublisher;
+            this._logger = logger;
+            this._tenantService = tenantService;
+            this._tenantsRepository = tenantsRepository;
+            this._busPublisher = busPublisher;
         }
 
         public async Task HandleAsync(CompletePrimaryOwnerTransfer message, ICorrelationContext context)
         {
-            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
+            _logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
             try
             {
-                await tenantsRepository.CompletePrimaryOwnerTransferAsync(message.CommandingUserEmail, message.Tenantid, message.State);
+                var domain = await _tenantsRepository.CompletePrimaryOwnerTransferAsync(message.CommandingUserEmail, message.TenantId, message.State);
+                await _tenantService.RemoveTenantResponseModelsFromRedis(message.TenantId, domain);
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogDebug(ex, "Failed to complete the primary owner transfer");
+                _logger.LogDebug(ex, "Failed to complete the primary owner transfer");
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An unexpected error occurred completing the primary owner transfer");
+                _logger.LogError(ex, "An unexpected error occurred completing the primary owner transfer");
                 throw new RangerException("An unexpected error occurred completing the primary owner transfer");
             }
-            busPublisher.Publish(new PrimaryOwnerTransferCompleted(), context);
+            _busPublisher.Publish(new PrimaryOwnerTransferCompleted(), context);
         }
     }
 }

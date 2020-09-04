@@ -12,34 +12,37 @@ namespace Ranger.Services.Tenants.Handlers
 {
     class DeleteTenantHandler : ICommandHandler<DeleteTenant>
     {
-        private readonly ILogger<DeleteTenantHandler> logger;
-        private readonly ITenantsRepository tenantRepository;
-        private readonly IBusPublisher busPublisher;
+        private readonly ILogger<DeleteTenantHandler> _logger;
+        private readonly ITenantService _tenantService;
+        private readonly ITenantsRepository _tenantRepository;
+        private readonly IBusPublisher _busPublisher;
 
-        public DeleteTenantHandler(ILogger<DeleteTenantHandler> logger, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
+        public DeleteTenantHandler(ILogger<DeleteTenantHandler> logger, ITenantService tenantService, ITenantsRepository tenantRepository, IBusPublisher busPublisher)
         {
-            this.logger = logger;
-            this.tenantRepository = tenantRepository;
-            this.busPublisher = busPublisher;
+            this._logger = logger;
+            this._tenantService = tenantService;
+            this._tenantRepository = tenantRepository;
+            this._busPublisher = busPublisher;
         }
 
         public async Task HandleAsync(DeleteTenant command, ICorrelationContext context)
         {
-            logger.LogInformation("Handling DeleteTenant message");
+            _logger.LogInformation("Handling DeleteTenant message");
             try
             {
-                var orgNameOfDeleted = await this.tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
-                logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
-                busPublisher.Publish(new TenantDeleted(command.TenantId, orgNameOfDeleted), context);
+                var (orgNameOfDeleted, domainOfDeleted) = await this._tenantRepository.SoftDelete(command.CommandingUserEmail, command.TenantId);
+                await _tenantService.RemoveTenantResponseModelsFromRedis(command.TenantId, domainOfDeleted);
+                _logger.LogInformation("Tenant domain deleted {TenantId}", command.TenantId);
+                _busPublisher.Publish(new TenantDeleted(command.TenantId, orgNameOfDeleted), context);
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogDebug(ex, "Failed to delete the tenant {TenantId}}", command.TenantId);
+                _logger.LogDebug(ex, "Failed to delete the tenant {TenantId}}", command.TenantId);
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An unexpected error occurred deleting tenant {TenantId}", command.TenantId);
+                _logger.LogError(ex, "An unexpected error occurred deleting tenant {TenantId}", command.TenantId);
                 throw new RangerException($"An unexpected error occurred deleting tenant with TenantId '{command.TenantId}'");
             }
         }

@@ -11,36 +11,39 @@ namespace Ranger.Services.Tenants.Handlers
 {
     public class InitiatePrimaryOwnerTransferHandler : ICommandHandler<InitiatePrimaryOwnerTransfer>
     {
-        private readonly ILogger<InitiatePrimaryOwnerTransferHandler> logger;
-        private readonly ITenantsRepository tenantsRepository;
-        private readonly IBusPublisher busPublisher;
+        private readonly ILogger<InitiatePrimaryOwnerTransferHandler> _logger;
+        private readonly ITenantService _tenantService;
+        private readonly ITenantsRepository _tenantsRepository;
+        private readonly IBusPublisher _busPublisher;
 
-        public InitiatePrimaryOwnerTransferHandler(ILogger<InitiatePrimaryOwnerTransferHandler> logger, ITenantsRepository tenantsRepository, IBusPublisher busPublisher)
+        public InitiatePrimaryOwnerTransferHandler(ILogger<InitiatePrimaryOwnerTransferHandler> logger, ITenantService tenantService, ITenantsRepository tenantsRepository, IBusPublisher busPublisher)
         {
-            this.logger = logger;
-            this.tenantsRepository = tenantsRepository;
-            this.busPublisher = busPublisher;
+            this._logger = logger;
+            this._tenantService = tenantService;
+            this._tenantsRepository = tenantsRepository;
+            this._busPublisher = busPublisher;
         }
 
         public async Task HandleAsync(InitiatePrimaryOwnerTransfer message, ICorrelationContext context)
         {
-            logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
+            _logger.LogInformation("Handling InitiatePrimaryOwnerTransfer message");
             var primaryOwnerTransfer = PrimaryOwnerTransfer.Create(message.CommandingUserEmail, message.TransferUserEmail, context.CorrelationContextId);
             try
             {
-                await tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.TenantId, primaryOwnerTransfer);
+                var domain = await _tenantsRepository.AddPrimaryOwnerTransferAsync(message.CommandingUserEmail, message.TenantId, primaryOwnerTransfer);
+                await _tenantService.RemoveTenantResponseModelsFromRedis(message.TenantId, domain);
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogDebug(ex, "Failed to intiate the domain transfer");
+                _logger.LogDebug(ex, "Failed to intiate the domain transfer");
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An unexpected error occurred intiating the domain transfer");
+                _logger.LogError(ex, "An unexpected error occurred intiating the domain transfer");
                 throw new RangerException("An unexpected error occurred intiating the domain transfer");
             }
-            busPublisher.Publish(new PrimaryOwnerTransferInitiated(), context);
+            _busPublisher.Publish(new PrimaryOwnerTransferInitiated(), context);
         }
     }
 }

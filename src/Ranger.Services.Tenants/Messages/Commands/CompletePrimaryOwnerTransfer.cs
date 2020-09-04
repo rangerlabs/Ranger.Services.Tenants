@@ -22,11 +22,11 @@ namespace Ranger.Services.Tenants
                 throw new ArgumentException("'Pending' is an invalid status to complete a Primary Owner Transfer");
             }
 
-            this.Tenantid = tenantId;
+            this.TenantId = tenantId;
             this.CommandingUserEmail = commandingUserEmail;
             this.State = state;
         }
-        public string Tenantid { get; }
+        public string TenantId { get; }
         public string CommandingUserEmail { get; }
         public PrimaryOwnerTransferStateEnum State { get; }
     }

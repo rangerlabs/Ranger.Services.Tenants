@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Ranger.Common;
 using Ranger.Services.Tenants.Data;
+using StackExchange.Redis;
 
 namespace Ranger.Services.Tenants
 {
@@ -16,13 +17,13 @@ namespace Ranger.Services.Tenants
     [Authorize]
     public class TenantController : Controller
     {
-        private readonly ITenantService tenantService;
+        private readonly ITenantService _tenantService;
         private readonly ITenantsRepository tenantRepository;
         private readonly ILogger<TenantController> logger;
 
         public TenantController(ITenantsRepository tenantRepository, ITenantService tenantService, ILogger<TenantController> logger)
         {
-            this.tenantService = tenantService;
+            this._tenantService = tenantService;
             this.tenantRepository = tenantRepository;
             this.logger = logger;
         }
@@ -49,10 +50,20 @@ namespace Ranger.Services.Tenants
             var tenantVersionTuple = (default(Tenant), default(int));
             if (string.IsNullOrWhiteSpace(tenantId))
             {
+                var redisResult = await _tenantService.GetTenantResponseModelOrDefaultFromRedisByDomainAsync(domain);
+                if (!(redisResult is null))
+                {
+                    return new ApiResponse($"Successfully retrieved tenant", result: redisResult, statusCode: StatusCodes.Status200OK);
+                }
                 tenantVersionTuple = await this.tenantRepository.GetNotDeletedTenantByDomainAsync(domain, cancellationToken);
             }
             else
             {
+                var redisResult = await _tenantService.GetTenantResponseModelOrDefaultFromRedisByIdAsync(domain);
+                if (!(redisResult is null))
+                {
+                    return new ApiResponse($"Successfully retrieved tenant", result: redisResult, statusCode: StatusCodes.Status200OK);
+                }
                 tenantVersionTuple = await this.tenantRepository.GetNotDeletedTenantByTenantIdAsync(tenantId, cancellationToken);
             }
             if (tenantVersionTuple.Item1 is null)
@@ -60,7 +71,7 @@ namespace Ranger.Services.Tenants
                 throw new ApiException("No tenant was found for the specified tenant id", StatusCodes.Status404NotFound);
             }
 
-            var result = new
+            var result = new TenantResponseModel
             {
                 TenantId = tenantVersionTuple.Item1.TenantId,
                 CreatedOn = tenantVersionTuple.Item1.CreatedOn,
@@ -71,9 +82,11 @@ namespace Ranger.Services.Tenants
                 PrimaryOwnerTransfer = tenantVersionTuple.Item1.PrimaryOwnerTransfer,
                 Version = tenantVersionTuple.Item2
             };
-
+            _tenantService.SetTenantResponseModelInRedisByDomain(result);
+            _tenantService.SetTenantResponseModelInRedisById(result);
             return new ApiResponse($"Successfully retrieved tenant", result: result, statusCode: StatusCodes.Status200OK);
         }
+
 
         /// <summary>
         /// Determines whether a domain has been reserved
@@ -150,7 +163,7 @@ namespace Ranger.Services.Tenants
         [HttpPut("/tenants/{domain}/confirm")]
         public async Task<ApiResponse> Confirm(string domain, ConfirmModel confirmModel)
         {
-            TenantConfirmStatusEnum status = await tenantService.ConfirmTenantAsync(domain, confirmModel.Token);
+            TenantConfirmStatusEnum status = await _tenantService.ConfirmTenantAsync(domain, confirmModel.Token);
             return status switch
             {
                 TenantConfirmStatusEnum.InvalidToken => throw new ApiException("The registration key is invalid. Failed to confirm the domain", StatusCodes.Status400BadRequest),

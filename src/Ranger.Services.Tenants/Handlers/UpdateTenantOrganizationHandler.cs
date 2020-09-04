@@ -10,28 +10,29 @@ namespace Ranger.Services.Tenants.Handlers
 {
     public class UpdateTenantOrganizationHandler : ICommandHandler<UpdateTenantOrganization>
     {
-        private readonly IBusPublisher busPublisher;
-        private readonly ITenantService tenantsService;
-        private readonly ILogger<UpdateTenantOrganizationHandler> logger;
+        private readonly IBusPublisher _busPublisher;
+        private readonly ITenantService _tenantsService;
+        private readonly ILogger<UpdateTenantOrganizationHandler> _logger;
 
         public UpdateTenantOrganizationHandler(IBusPublisher busPublisher, ITenantService tenantsService, ILogger<UpdateTenantOrganizationHandler> logger)
         {
-            this.busPublisher = busPublisher;
-            this.tenantsService = tenantsService;
-            this.logger = logger;
+            this._busPublisher = busPublisher;
+            this._tenantsService = tenantsService;
+            this._logger = logger;
         }
 
         public async Task HandleAsync(UpdateTenantOrganization message, ICorrelationContext context)
         {
-            logger.LogInformation("Handling UpdateTenantOrganization message");
+            _logger.LogInformation("Handling UpdateTenantOrganization message");
             try
             {
-                var updatedTenantResult = await tenantsService.UpdateTenantOrganizationDetailsAsync(message.TenantId, message.CommandingUserEmail, message.Version, message.OrganizationName, message.Domain);
-                busPublisher.Publish(new TenantOrganizationUpdated(updatedTenantResult.tenant.OrganizationName, updatedTenantResult.tenant.Domain, updatedTenantResult.domainWasUpdated, updatedTenantResult.oldDomain), context);
+                var updatedTenantResult = await _tenantsService.UpdateTenantOrganizationDetailsAsync(message.TenantId, message.CommandingUserEmail, message.Version, message.OrganizationName, message.Domain);
+                await _tenantsService.RemoveTenantResponseModelsFromRedis(message.TenantId, message.Domain);
+                _busPublisher.Publish(new TenantOrganizationUpdated(updatedTenantResult.tenant.OrganizationName, updatedTenantResult.tenant.Domain, updatedTenantResult.domainWasUpdated, updatedTenantResult.oldDomain), context);
             }
             catch (EventStreamDataConstraintException ex)
             {
-                logger.LogDebug(ex, "Failed to update organization details");
+                _logger.LogDebug(ex, "Failed to update organization details");
                 throw new RangerException(ex.Message);
             }
             catch (ConcurrencyException ex)

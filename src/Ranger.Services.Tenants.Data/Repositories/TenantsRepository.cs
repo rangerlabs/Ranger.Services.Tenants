@@ -76,7 +76,7 @@ namespace Ranger.Services.Tenants.Data
             }
         }
 
-        public async Task<string> SoftDelete(string userEmail, string tenantId)
+        public async Task<(string orgName, string domain)> SoftDelete(string userEmail, string tenantId)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -143,7 +143,7 @@ namespace Ranger.Services.Tenants.Data
                 {
                     throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentTenantStream.Version + 1}'. The tenant was not deleted");
                 }
-                return currentTenant.OrganizationName;
+                return (currentTenant.OrganizationName, currentTenant.Domain);
             }
         }
 
@@ -329,7 +329,7 @@ namespace Ranger.Services.Tenants.Data
             throw new System.NotImplementedException();
         }
 
-        public async Task CompletePrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransferStateEnum state)
+        public async Task<string> CompletePrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransferStateEnum state)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -364,6 +364,7 @@ namespace Ranger.Services.Tenants.Data
             try
             {
                 await this.context.SaveChangesAsync();
+                return tenant.Domain;
             }
             catch (DbUpdateException ex)
             {
@@ -392,7 +393,7 @@ namespace Ranger.Services.Tenants.Data
 
         }
 
-        public async Task AddPrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransfer transfer)
+        public async Task<string> AddPrimaryOwnerTransferAsync(string userEmail, string tenantId, PrimaryOwnerTransfer transfer)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -427,6 +428,7 @@ namespace Ranger.Services.Tenants.Data
             try
             {
                 await this.context.SaveChangesAsync();
+                return tenant.Domain;
             }
             catch (DbUpdateException ex)
             {
