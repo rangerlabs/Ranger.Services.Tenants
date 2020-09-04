@@ -17,7 +17,6 @@ using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
-using Ranger.Redis;
 using Ranger.Services.Operations.Messages.Tenants.RejectedEvents;
 using Ranger.Services.Tenants.Data;
 
