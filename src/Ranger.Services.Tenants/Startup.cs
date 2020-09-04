@@ -55,7 +55,6 @@ namespace Ranger.Services.Tenants
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             });
-            services.AddRedis(configuration["redis:ConnectionString"]);
 
             services.AddTransient<ITenantsDbContextInitializer, TenantsDbContextInitializer>();
             services.AddTransient<ITenantService, TenantsService>();

@@ -17,7 +17,6 @@ addons:
 services:
     - docker
     - rabbitmq
-    - redis
 branches:
     only:
         - master
