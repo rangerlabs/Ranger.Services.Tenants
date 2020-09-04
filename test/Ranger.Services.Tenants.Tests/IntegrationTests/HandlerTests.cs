@@ -32,7 +32,6 @@ namespace Ranger.Services.Tenants.Tests
         public async Task CreateTenantHandler_ReceivesMessage_CreatesTenant()
         {
             var msg = new CreateTenant("domain", "organization", "hello@gmail.com", "John", "Doe", "password");
-            this.busPublisher.Send(msg, CorrelationContext.Empty);
 
             var handled = false;
             this.busSubscriber.SubscribeEventWithCallback<TenantCreated>((m, c) =>
@@ -40,6 +39,7 @@ namespace Ranger.Services.Tenants.Tests
                 handled = true;
                 return Task.CompletedTask;
             });
+            this.busPublisher.Send(msg, CorrelationContext.Empty);
 
             while (!handled) { }
 
