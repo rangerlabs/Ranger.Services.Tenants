@@ -21,19 +21,6 @@ namespace Ranger.Services.Tenants
             _redisDb = connectionMultiplexer.GetDatabase();
         }
 
-        public async Task<TenantResponseModel> GetTenantResponseModelOrDefaultFromRedisByIdAsync(string tenantId)
-        {
-            string result = await _redisDb.StringGetAsync(RedisKeys.GetTenantId(tenantId));
-            if (String.IsNullOrWhiteSpace(result))
-            {
-                return default;
-            }
-            else
-            {
-                _logger.LogDebug("TenantResponseModels retrieved from cache");
-                return JsonConvert.DeserializeObject<TenantResponseModel>(result);
-            }
-        }
 
         public async Task<TenantResponseModel> GetTenantResponseModelOrDefaultFromRedisByDomainAsync(string domain)
         {
@@ -119,6 +106,20 @@ namespace Ranger.Services.Tenants
 
             await _tenantRepository.UpdateTenantAsync(commandingUserEmail, "TenantOrganizationUpdated", version, tenantVersion.tenant);
             return (tenantVersion.tenant, domainWasUpdated, oldDomain);
+        }
+
+        public async Task<TenantResponseModel> GetTenantResponseModelOrDefaultFromRedisByIdAsync(string tenantId)
+        {
+            string result = await _redisDb.StringGetAsync(RedisKeys.GetTenantId(tenantId));
+            if (String.IsNullOrWhiteSpace(result))
+            {
+                return default;
+            }
+            else
+            {
+                _logger.LogDebug("TenantResponseModels retrieved from cache");
+                return JsonConvert.DeserializeObject<TenantResponseModel>(result);
+            }
         }
 
         public async Task SetTenantResponseModelsInRedis(TenantResponseModel model)

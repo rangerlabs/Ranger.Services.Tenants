@@ -33,13 +33,12 @@ namespace Ranger.Services.Tenants
         /// </summary>
         /// <param name="tenantId">The tenant's unique identitfier</param>
         /// <param name="domain">The tenant's domain identitfier</param>
-        /// <param name="version">Whether to include the version along with the tenant</param>
         /// <param name="cancellationToken"></param>
         [HttpGet("/tenants")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ApiResponse> GetTenants([FromQuery] string tenantId, [FromQuery] string domain, [FromQuery] bool version, CancellationToken cancellationToken)
+        public async Task<ApiResponse> GetTenants([FromQuery] string tenantId, [FromQuery] string domain, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(tenantId) && string.IsNullOrWhiteSpace(domain))
             {
@@ -59,7 +58,7 @@ namespace Ranger.Services.Tenants
             }
             else
             {
-                var redisResult = await _tenantService.GetTenantResponseModelOrDefaultFromRedisByIdAsync(domain);
+                var redisResult = await _tenantService.GetTenantResponseModelOrDefaultFromRedisByIdAsync(tenantId);
                 if (!(redisResult is null))
                 {
                     return new ApiResponse($"Successfully retrieved tenant", result: redisResult, statusCode: StatusCodes.Status200OK);
