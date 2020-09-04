@@ -125,8 +125,8 @@ namespace Ranger.Services.Tenants
         {
             var tasks = new Task[2]
             {
-                _redisDb.SetAddAsync(RedisKeys.GetTenantId(model.TenantId), JsonConvert.SerializeObject(model)),
-                _redisDb.SetAddAsync(RedisKeys.GetTenantDomain(model.Domain), JsonConvert.SerializeObject(model))
+                _redisDb.StringSetAsync(RedisKeys.GetTenantId(model.TenantId), JsonConvert.SerializeObject(model)),
+                _redisDb.StringSetAsync(RedisKeys.GetTenantDomain(model.Domain), JsonConvert.SerializeObject(model))
             };
             await Task.WhenAll(tasks);
             _logger.LogDebug("TenantResponseModels added to cache");
