@@ -82,8 +82,7 @@ namespace Ranger.Services.Tenants
                 PrimaryOwnerTransfer = tenantVersionTuple.Item1.PrimaryOwnerTransfer,
                 Version = tenantVersionTuple.Item2
             };
-            _tenantService.SetTenantResponseModelInRedisByDomain(result);
-            _tenantService.SetTenantResponseModelInRedisById(result);
+            await _tenantService.SetTenantResponseModelsInRedis(result);
             return new ApiResponse($"Successfully retrieved tenant", result: result, statusCode: StatusCodes.Status200OK);
         }
 

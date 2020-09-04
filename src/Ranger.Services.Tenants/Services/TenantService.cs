@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Ranger.Services.Tenants.Data;
 using StackExchange.Redis;
@@ -10,36 +11,40 @@ namespace Ranger.Services.Tenants
     public class TenantsService : ITenantService
     {
         private readonly ITenantsRepository _tenantRepository;
-        private readonly IDatabase redisDb;
+        private readonly ILogger<TenantsService> _logger;
+        private readonly IDatabase _redisDb;
 
-        public TenantsService(ITenantsRepository tenantRepository, IConnectionMultiplexer connectionMultiplexer)
+        public TenantsService(ITenantsRepository tenantRepository, IConnectionMultiplexer connectionMultiplexer, ILogger<TenantsService> logger)
         {
             _tenantRepository = tenantRepository;
-            redisDb = connectionMultiplexer.GetDatabase();
+            this._logger = logger;
+            _redisDb = connectionMultiplexer.GetDatabase();
         }
 
         public async Task<TenantResponseModel> GetTenantResponseModelOrDefaultFromRedisByIdAsync(string tenantId)
         {
-            string result = await redisDb.StringGetAsync(RedisKeys.GetTenantId(tenantId));
+            string result = await _redisDb.StringGetAsync(RedisKeys.GetTenantId(tenantId));
             if (String.IsNullOrWhiteSpace(result))
             {
                 return default;
             }
             else
             {
+                _logger.LogDebug("TenantResponseModels retrieved from cache");
                 return JsonConvert.DeserializeObject<TenantResponseModel>(result);
             }
         }
 
         public async Task<TenantResponseModel> GetTenantResponseModelOrDefaultFromRedisByDomainAsync(string domain)
         {
-            string result = await redisDb.StringGetAsync(RedisKeys.GetTenantDomain(domain));
+            string result = await _redisDb.StringGetAsync(RedisKeys.GetTenantDomain(domain));
             if (String.IsNullOrWhiteSpace(result))
             {
                 return default;
             }
             else
             {
+                _logger.LogDebug("TenantResponseModels retrieved from cache");
                 return JsonConvert.DeserializeObject<TenantResponseModel>(result);
             }
         }
@@ -116,24 +121,26 @@ namespace Ranger.Services.Tenants
             return (tenantVersion.tenant, domainWasUpdated, oldDomain);
         }
 
-        public void SetTenantResponseModelInRedisById(TenantResponseModel model)
+        public async Task SetTenantResponseModelsInRedis(TenantResponseModel model)
         {
-            redisDb.SetAdd(RedisKeys.GetTenantId(model.TenantId), JsonConvert.SerializeObject(model), CommandFlags.FireAndForget);
-        }
-
-        public void SetTenantResponseModelInRedisByDomain(TenantResponseModel model)
-        {
-            redisDb.SetAdd(RedisKeys.GetTenantDomain(model.Domain), JsonConvert.SerializeObject(model), CommandFlags.FireAndForget);
+            var tasks = new Task[2]
+            {
+                _redisDb.SetAddAsync(RedisKeys.GetTenantId(model.TenantId), JsonConvert.SerializeObject(model)),
+                _redisDb.SetAddAsync(RedisKeys.GetTenantDomain(model.Domain), JsonConvert.SerializeObject(model))
+            };
+            await Task.WhenAll(tasks);
+            _logger.LogDebug("TenantResponseModels added to cache");
         }
 
         public async Task RemoveTenantResponseModelsFromRedis(string tenantId, string domain)
         {
             var tasks = new Task[2]
             {
-                redisDb.KeyDeleteAsync(RedisKeys.GetTenantId(tenantId)),
-                redisDb.KeyDeleteAsync(RedisKeys.GetTenantDomain(domain))
+                _redisDb.KeyDeleteAsync(RedisKeys.GetTenantId(tenantId)),
+                _redisDb.KeyDeleteAsync(RedisKeys.GetTenantDomain(domain))
             };
             await Task.WhenAll(tasks);
+            _logger.LogDebug("TenantResponseModels removed from cache");
         }
     }
 }
