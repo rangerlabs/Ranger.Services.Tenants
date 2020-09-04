@@ -31,7 +31,7 @@
     <PackageReference Include="Ranger.Monitoring" version="3.2.3" />
     <PackageReference Include="Ranger.RabbitMQ" version="4.4.8" />
     <PackageReference Include="Ranger.ApiUtilities" Version="3.6.1" />
-    <PackageReference Include="Ranger.Redis" Version="1.0.1" />
+    <PackageReference Include="Ranger.Redis" Version="1.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Tenants.Data\Ranger.Services.Tenants.Data.csproj" />
