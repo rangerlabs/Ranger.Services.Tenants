@@ -24,6 +24,9 @@ namespace Ranger.Services.Tenants.Tests
             this.tenantService = factory.Services.GetService(typeof(ITenantService)) as ITenantService;
             this.tenantsRepository = factory.Services.GetService(typeof(ITenantsRepository)) as ITenantsRepository;
         }
+        [Fact]
+        public void Tenants_Starts()
+        { }
 
         [Fact]
         public async Task CreateTenantHandler_ReceivesMessage_CreatesTenant()

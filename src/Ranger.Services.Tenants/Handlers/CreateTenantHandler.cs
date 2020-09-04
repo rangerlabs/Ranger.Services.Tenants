@@ -24,7 +24,6 @@ namespace Ranger.Services.Tenants.Handlers
 
         public async Task HandleAsync(CreateTenant command, ICorrelationContext context)
         {
-            logger.LogInformation("Handling CreateTenant message");
             var random = new Random();
             var databasePassword = Crypto.GenerateSudoRandomPasswordString();
             var tenant = new Tenant()
