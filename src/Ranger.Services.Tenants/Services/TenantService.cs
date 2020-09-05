@@ -63,6 +63,7 @@ namespace Ranger.Services.Tenants
                 tenant.Token = "";
                 tenant.Confirmed = true;
                 await _tenantRepository.UpdateTenantAsync("Anonymous", "TenantConfirmed", 1, tenant);
+                await RemoveTenantResponseModelsFromRedis(tenant.TenantId, tenant.Domain);
                 return TenantConfirmStatusEnum.Confirmed;
             }
             return TenantConfirmStatusEnum.InvalidToken;
