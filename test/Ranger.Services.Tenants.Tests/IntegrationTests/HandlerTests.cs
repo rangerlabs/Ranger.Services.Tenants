@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Ranger.RabbitMQ;
 using Ranger.RabbitMQ.BusPublisher;
@@ -51,5 +52,14 @@ namespace Ranger.Services.Tenants.Tests
             tenant.tenant.Token.ShouldNotBeEmpty();
             tenant.tenant.DatabasePassword.ShouldNotBeEmpty();
         }
+
+        [Fact]
+        public void finds()
+        {
+            var MessagesAssembly = typeof(Startup).Assembly;
+            var messageTypes = MessagesAssembly.GetTypes().Where(t => t.IsClass && typeof(IMessage).IsAssignableFrom(t)).ToList();
+            return;
+        }
     }
+
 }
