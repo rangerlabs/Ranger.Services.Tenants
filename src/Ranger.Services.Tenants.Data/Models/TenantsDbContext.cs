@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
+using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Tenants.Data
 {
-    public class TenantsDbContext : DbContext, IDataProtectionKeyContext
+    public class TenantsDbContext : DbContext, IDataProtectionKeyContext, IOutboxStore
     {
 
         private readonly IDataProtectionProvider dataProtectionProvider;
@@ -19,6 +20,7 @@ namespace Ranger.Services.Tenants.Data
         public DbSet<TenantStream> TenantStreams { get; set; }
         public DbSet<TenantUniqueConstraint> TenantUniqueConstraints { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<OutboxMessage> Outbox { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

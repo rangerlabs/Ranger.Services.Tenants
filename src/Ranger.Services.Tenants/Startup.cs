@@ -92,7 +92,7 @@ namespace Ranger.Services.Tenants
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            builder.AddRabbitMq<Startup>();
+            builder.AddRabbitMq<Startup, TenantsDbContext>();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
