@@ -28,7 +28,7 @@ namespace Ranger.Services.Tenants.Handlers
             var databasePassword = Crypto.GenerateSudoRandomPasswordString();
             var tenant = new Tenant()
             {
-                TenantId = Guid.NewGuid().ToString("N"),
+                TenantId = $"rngr-{Guid.NewGuid().ToString("N")}",
                 CreatedOn = DateTime.UtcNow,
                 OrganizationName = command.OrganizationName,
                 Domain = command.Domain,
